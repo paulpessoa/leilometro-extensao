@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Leilômetro — Análise de Oportunidade",
+  "version": "1.0.0",
+  "description": "Análise inteligente de leilões de veículos em tempo real. Calcula o preço ideal, taxas e KM/Ano direto na tela.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "Leilômetro"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://leilo.com.br/*",
+        "*://*.leilo.com.br/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://www.leilometro.com.br/*"
+    ]
+  },
+  "host_permissions": [
+    "*://*.leilo.com.br/*"
+  ]
+}
