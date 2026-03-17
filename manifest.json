@@ -35,16 +35,11 @@
     }
   ],
   "permissions": [
-    "storage",
-    "activeTab",
-    "tabs"
+    "storage"
   ],
   "externally_connectable": {
     "matches": [
       "https://www.leilometro.com.br/*"
     ]
-  },
-  "host_permissions": [
-    "*://*.leilo.com.br/*"
-  ]
+  }
 }
