@@ -1,6 +1,6 @@
 /**
- * Leilômetro — Content Script v1.0.0
- * UI: v3.0 | Scraping: window.__INITIAL_STATE__ + DOM fallback
+ * Leilômetro — Content Script v1.0.1
+ * UI: v3.1 | Scraping: window.__INITIAL_STATE__ + DOM fallback
  */
 
 ;(function () {
@@ -42,7 +42,7 @@
       "color: #f0ba32; font-family: monospace; font-size: 11px; line-height: 1.4;"
     )
     console.log(
-      "%c  v1.0.0 — Análise de leilões de veículos em tempo real",
+      "%c  v1.0.1 — Análise de leilões de veículos em tempo real",
       "color: #888; font-family: monospace; font-size: 11px;"
     )
   })()
@@ -995,7 +995,7 @@
 
     const panel = document.createElement("div")
     panel.id = "leilometro-panel"
-    panel.setAttribute("data-version", "1.0.0")
+    panel.setAttribute("data-version", "1.0.1")
     panel.setAttribute("data-lote-id", loteId)
 
     if (panelState.position) {
@@ -1646,7 +1646,7 @@ ${notas ? `<div class="sec"><div class="stitle">Anotações do Avaliador</div><d
   <tr><td>IPVA atrasado</td><td class="red">${BRL(CONFIG.custoIPVA)}</td></tr>
 </table></div>
 <div class="aviso">⚠️ Análise de apoio à decisão. Leia o edital completo e faça vistoria antes de arrematar.</div>
-<div class="footer"><span>Leilômetro v1.0.0 — ${window.location.href.slice(0, 60)}</span><span>${now}</span></div>
+<div class="footer"><span>Leilômetro v1.0.1 — ${window.location.href.slice(0, 60)}</span><span>${now}</span></div>
 <script>window.onload=()=>window.print();<\/script></body></html>`)
     win.document.close()
   }
