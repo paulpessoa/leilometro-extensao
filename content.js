@@ -52,6 +52,16 @@
   const LOTS_INDEX_KEY = "lm_lots_index"
   const MAX_LOTES = 50
 
+  // ─── ESTADO PERSISTENTE DO PAINEL EM TELA ──────────────────────────────────
+  const panelState = {
+    isClosedByUser: false,
+    isMinimized: false,
+    isDragging: false,
+    position: null, // { left, top }
+    scroll: 0,
+    lastKnownLance: null
+  }
+
   // ─── DETECÇÃO DE PÁGINA DE VEÍCULO ────────────────────────────────────────
   const VEHICLE_PAGE_PATTERNS = {
     "leilo.com.br":
@@ -175,16 +185,25 @@
   const SITE_SELECTORS = {
     "leilo.com.br": {
       lance: [
+        ".painel-lances-julho2026__valor span",
+        ".painel-lances-julho2026__valor",
+        "[class*='painel-lances'][class*='__valor']",
+        "strong[class*='valor']",
         "h3.valor-lote span",
         ".valor-lote span",
         ".current-bid",
         ".valor-atual"
       ],
-      ano: [".label-categoria"],
-      km: [".label-categoria"],
-      combustivel: [".label-categoria"],
-      modelo: ["h1.nome-veiculo", "h1"],
-      fipe: [".label-categoria"],
+      ano: [".informacoes-lote-julho2026__item", ".label-categoria"],
+      km: [".informacoes-lote-julho2026__item", ".label-categoria"],
+      combustivel: [".informacoes-lote-julho2026__item", ".label-categoria"],
+      modelo: [
+        "h1.pagina-lote-julho2026__titulo",
+        "[class*='pagina-lote'][class*='__titulo']",
+        "h1.nome-veiculo",
+        "h1"
+      ],
+      fipe: [".informacoes-lote-julho2026__item", ".label-categoria"],
       custos: {
         comissao: 'span[class*="comissao"], span',
         deposito: "span",
@@ -316,7 +335,7 @@
   function extractNumber(str) {
     if (!str) return null
     const cleaned = str
-      .replace(/[R$\s]/g, "")
+      .replace(/[R$\s\u00a0]/g, "")
       .replace(/\./g, "")
       .replace(",", ".")
     const n = parseFloat(cleaned)
@@ -344,16 +363,186 @@
     return m ? parseFloat(m[1].replace(",", ".")) / 100 : null
   }
 
+  // ─── API SCRAPING (LEILOMASTER) ─────────────────────────────────────────────
+  const apiCache = new Map()
+
+  async function fetchLoteFromApi(loteId, forceRefresh = false) {
+    if (!loteId || typeof loteId !== "string" || !loteId.includes("-")) return null
+    const cached = apiCache.get(loteId)
+    if (!forceRefresh && cached && Date.now() - cached.time < 30000) {
+      return cached.data
+    }
+    try {
+      const url = `https://api.leilo.com.br/v1/lote/by-id/${loteId}`
+      const res = await fetch(url, {
+        headers: {
+          Accept: "application/json, text/plain, */*"
+        }
+      })
+      if (!res.ok) return null
+      const l = await res.json()
+      if (!l || !l.id) return null
+
+      const anoAtual = new Date().getFullYear()
+      const lance =
+        l.valor?.valorProposta ||
+        l.valor?.lance?.valor ||
+        l.valor?.minimo ||
+        0
+      const fipeScraped = l.veiculo?.valorMercado || 0
+      const modelo = (l.nome || l.veiculo?.modelo || "Veículo")
+        .replace(/\s+/g, " ")
+        .substring(0, 60)
+      const comissaoPage = (l.valor?.comissaoPorcentagem || 5) / 100
+      const depositoBens = l.valor?.depositoDeBens || null
+      const taxaRemocao = l.valor?.remocao || null
+      const taxaVistoria = l.valor?.vistoria || null
+      const taxaDespachante = l.valor?.despachante || null
+      const totalDespesas = l.valor?.totalDespesas || null
+      const incremento = l.valor?.incremento || null
+      const anoRaw = l.veiculo?.anoModelo || l.veiculo?.anoFabricacao
+      const ano = anoRaw ? parseInt(String(anoRaw).match(/\d{4}/)?.[0]) : null
+
+      // Se o hodômetro for inacessível ou não for numérico, define null com segurança
+      let km = null
+      const kmCand = l.veiculo?.km ?? l.veiculo?.itensDetalhados?.quilometragem ?? null
+      if (kmCand !== null && typeof kmCand === "number" && !isNaN(kmCand) && kmCand > 0) {
+        km = kmCand
+      } else if (typeof kmCand === "string" && !/inacess[ií]vel|sem|n[aã]o/i.test(kmCand)) {
+        const kmParsed = extractNumber(kmCand)
+        if (kmParsed && kmParsed > 0) km = kmParsed
+      }
+
+      let combustivel = l.veiculo?.combustivel || "Flex"
+      if (/^fle/i.test(combustivel)) combustivel = "Flex"
+
+      const idadeVeiculo = ano ? Math.max(1, anoAtual - ano) : null
+      const kmAno = (km != null && km > 0 && idadeVeiculo) ? Math.round(km / idadeVeiculo) : null
+      const kmMes = kmAno ? Math.round(kmAno / 12) : null
+
+      const data = {
+        lance,
+        ano,
+        km,
+        kmAno,
+        kmMes,
+        combustivel,
+        modelo,
+        idadeVeiculo,
+        fipeScraped,
+        comissaoAuto: true,
+        comissaoPage,
+        depositoBens,
+        taxaRemocao,
+        taxaVistoria,
+        taxaDespachante,
+        totalDespesas,
+        incremento,
+        tipoRetomada: l.veiculo?.retomada || "",
+        fipeNome: l.veiculo?.infocarFipeNome || "",
+        fipeCodigo: l.veiculo?.infocarFipeCodigo || "",
+        laudo: l.laudoCautelarResultado || "",
+        milesMode: false,
+        fonte: "API Oficial"
+      }
+      apiCache.set(loteId, { time: Date.now(), data })
+      return data
+    } catch (e) {
+      return null
+    }
+  }
+
+  // ─── JSON-LD SCRAPING ───────────────────────────────────────────────────────
+  function scrapeJsonLd() {
+    try {
+      const scripts = document.querySelectorAll(
+        'script[type="application/ld+json"]'
+      )
+      for (const s of scripts) {
+        if (!s.textContent) continue
+        const j = JSON.parse(s.textContent)
+        const item = Array.isArray(j) ? j[0] : j
+        if (!item) continue
+        const types = Array.isArray(item["@type"])
+          ? item["@type"]
+          : [item["@type"]]
+        if (
+          types.includes("Product") ||
+          types.includes("Vehicle") ||
+          item.offers
+        ) {
+          const anoAtual = new Date().getFullYear()
+          const lance =
+            typeof item.offers?.price === "number"
+              ? item.offers.price
+              : extractNumber(String(item.offers?.price || "")) || 0
+          const modelo = (item.name || item.model || "Veículo")
+            .replace(/\s+/g, " ")
+            .substring(0, 60)
+          const anoRaw = item.vehicleModelDate || item.productionDate
+          const ano = anoRaw
+            ? parseInt(String(anoRaw).match(/\d{4}/)?.[0])
+            : null
+          const combustivel = item.fuelType || "Flex"
+          const idadeVeiculo = ano ? Math.max(1, anoAtual - ano) : null
+
+          return {
+            lance,
+            ano,
+            km: 0,
+            kmAno: null,
+            kmMes: null,
+            combustivel,
+            modelo,
+            idadeVeiculo,
+            fipeScraped: 0,
+            comissaoAuto: true,
+            comissaoPage: 0.05,
+            depositoBens: null,
+            taxaRemocao: null,
+            taxaVistoria: null,
+            taxaDespachante: null,
+            milesMode: false,
+            fonte: "JSON-LD"
+          }
+        }
+      }
+    } catch (e) {}
+    return null
+  }
+
   // ─── SCRAPING ──────────────────────────────────────────────────────────────
-  function scrapePageData() {
+  // ─── SCRAPING RESILIENTE COM ISOLAMENTO ────────────────────────────────────
+  async function scrapePageData(loteId, forceRefresh = false) {
     const anoAtual = new Date().getFullYear()
 
-    // ── 1. Prioridade: window.__INITIAL_STATE__ (leilo.com.br) ──────────────
+    // ── 1. Prioridade máxima: API Oficial (leilo.com.br) ──────────────
+    if (window.location.hostname?.includes("leilo.com.br") && loteId) {
+      try {
+        const apiData = await fetchLoteFromApi(loteId, forceRefresh)
+        if (apiData) {
+          // Tenta atualizar lance do DOM se for mais recente (ex: lance ao vivo durante o pregão)
+          try {
+            const domLance = extractNumber(
+              trySelectors(SITE_SELECTORS["leilo.com.br"]?.lance)
+            )
+            if (domLance && domLance > apiData.lance) {
+              apiData.lance = domLance
+            }
+          } catch (_) {}
+          return apiData
+        }
+      } catch (e) {
+        console.warn("[Leilômetro] Falha ao consultar API oficial, recorrendo ao fallback DOM:", e)
+      }
+    }
+
+    // ── 2. Legado: window.__INITIAL_STATE__ (leilo.com.br versão anterior) ─────
     try {
       const s = Array.from(document.querySelectorAll("script")).find((x) =>
-        x.textContent.includes("window.__INITIAL_STATE__")
+        x?.textContent?.includes("window.__INITIAL_STATE__")
       )
-      if (s) {
+      if (s?.textContent) {
         const txt = s.textContent
         const j = JSON.parse(
           txt.substring(txt.indexOf("{"), txt.lastIndexOf("}") + 1)
@@ -374,7 +563,7 @@
           const ano = anoRaw
             ? parseInt(String(anoRaw).match(/\d{4}/)?.[0])
             : null
-          const km = l.veiculo?.quilometragem || l.veiculo?.km || 0
+          const km = l.veiculo?.quilometragem || l.veiculo?.km || null
           const combustivel = l.veiculo?.combustivel || "Flex"
           const idadeVeiculo = ano ? Math.max(1, anoAtual - ano) : null
           const kmAno =
@@ -402,79 +591,211 @@
           }
         }
       }
-    } catch (e) {}
+    } catch (_) {}
 
-    // ── 2. Fallback: DOM scraping ────────────────────────────────────────────
-    const selectors = SITE_SELECTORS[getSiteKey()]
-    const milesMode = selectors.milesMode || false
+    // ── 3. Fallback: DOM scraping isolado e resiliente ───────────────────────
+    const selectors = SITE_SELECTORS[getSiteKey()] || SITE_SELECTORS.default
+    const milesMode = Boolean(selectors?.milesMode)
 
-    const lanceRaw = trySelectors(selectors.lance)
-    const anoRaw = trySelectors(selectors.ano)
-    const kmRaw = trySelectors(selectors.km)
-    const combustRaw = trySelectors(selectors.combustivel)
-    const modeloRaw = trySelectors(selectors.modelo)
-    const fipeRaw = selectors.fipe ? trySelectors(selectors.fipe) : null
+    // Helper: leitura segura dos cards/informações Quasar 2026
+    const infoItemsMap = {}
+    try {
+      const items = document.querySelectorAll(".informacoes-lote-julho2026__item")
+      items?.forEach((it) => {
+        const lbl = it?.querySelector(".informacoes-lote-julho2026__label")?.textContent?.trim()?.toLowerCase() || ""
+        const val = it?.querySelector(".informacoes-lote-julho2026__value")?.textContent?.trim() || ""
+        if (lbl && val) infoItemsMap[lbl] = val
+      })
+    } catch (_) {}
 
-    let lance = extractNumber(lanceRaw)
-    let ano = extractYear(anoRaw) || extractYear(document.body.innerText)
-    let km = extractKM(kmRaw, milesMode)
-    let fipeScraped = extractNumber(fipeRaw)
+    // Fallback auxiliar: JSON-LD
+    let jsonLd = null
+    try {
+      jsonLd = scrapeJsonLd()
+    } catch (_) {}
 
+    // ── [VARIÁVEL CRÍTICA 1: LANCE ATUAL] ────────────────────────────────────
+    let lance = null
+    try {
+      const lanceRaw = trySelectors(selectors?.lance)
+      lance = extractNumber(lanceRaw)
+      if (!lance && jsonLd?.lance) {
+        lance = jsonLd.lance
+      }
+      if (!lance) {
+        const pageText = document.body?.innerText || ""
+        const matches = pageText.match(/r\$\s*[\d.,]+/gi)
+        if (matches) {
+          const valores = matches
+            .map((m) => extractNumber(m))
+            .filter((v) => v && v > 1000 && v < 500000)
+          if (valores.length) lance = Math.min(...valores)
+        }
+      }
+    } catch (e) {
+      console.warn("[Leilômetro] Falha ao extrair Lance Atual:", e)
+      lance = null
+    }
+
+    // ── [VARIÁVEL CRÍTICA 2: ANO DO VEÍCULO] ────────────────────────────────
+    let ano = null
+    try {
+      for (const [lbl, val] of Object.entries(infoItemsMap)) {
+        if (/^ano/i.test(lbl)) {
+          ano = extractYear(val)
+          if (ano) break
+        }
+      }
+      if (!ano) {
+        const anoRaw = trySelectors(selectors?.ano)
+        ano = extractYear(anoRaw)
+      }
+      if (!ano && jsonLd?.ano) {
+        ano = jsonLd.ano
+      }
+      if (!ano && document.body?.innerText) {
+        ano = extractYear(document.body.innerText)
+      }
+    } catch (e) {
+      console.warn("[Leilômetro] Falha ao extrair Ano:", e)
+      ano = null
+    }
+
+    // ── [VARIÁVEL CRÍTICA 3: QUILOMETRAGEM (KM)] ─────────────────────────────
+    let km = null
+    try {
+      for (const [lbl, val] of Object.entries(infoItemsMap)) {
+        if (/km|quilo/i.test(lbl)) {
+          if (!/inacess[ií]vel|n[aã]o|sem/i.test(val)) {
+            km = extractKM(val, milesMode)
+          }
+          break
+        }
+      }
+      if (!km) {
+        const kmRaw = trySelectors(selectors?.km)
+        if (kmRaw && !/inacess[ií]vel|n[aã]o|sem/i.test(kmRaw)) {
+          km = extractKM(kmRaw, milesMode)
+        }
+      }
+      if (!km && document.body?.innerText) {
+        const kmMatch = document.body.innerText.match(/([\d.]+)\s*km/i)
+        if (kmMatch && !/inacess[ií]vel|sem|n[aã]o/i.test(kmMatch[0])) {
+          km = extractKM(kmMatch[1], milesMode)
+        }
+      }
+    } catch (e) {
+      console.warn("[Leilômetro] Falha ao extrair KM (atribuindo fallback seguro null):", e)
+      km = null
+    }
+
+    // ── [VARIÁVEL CRÍTICA 4: MODELO / TÍTULO] ────────────────────────────────
+    let modelo = "Veículo não identificado"
+    try {
+      const modeloRaw = trySelectors(selectors?.modelo)
+      if (modeloRaw) {
+        modelo = modeloRaw.replace(/\s+/g, " ").substring(0, 60)
+      } else if (jsonLd?.modelo) {
+        modelo = jsonLd.modelo
+      } else if (document.title) {
+        modelo = document.title.split(/[-|]/)[0].trim().substring(0, 60)
+      }
+    } catch (e) {
+      console.warn("[Leilômetro] Falha ao extrair Modelo:", e)
+      modelo = "Veículo não identificado"
+    }
+
+    // ── [VARIÁVEL CRÍTICA 5: COMBUSTÍVEL] ────────────────────────────────────
+    let combustivel = "Flex"
+    try {
+      for (const [lbl, val] of Object.entries(infoItemsMap)) {
+        if (/combust/i.test(lbl)) {
+          combustivel = val
+          break
+        }
+      }
+      if (!combustivel || combustivel === "Flex") {
+        const combustRaw = trySelectors(selectors?.combustivel)
+        if (combustRaw) combustivel = combustRaw.trim()
+      }
+      if (jsonLd?.combustivel && (!combustivel || combustivel === "Flex")) {
+        combustivel = jsonLd.combustivel
+      }
+      const pageText = document.body?.innerText?.toLowerCase() || ""
+      if (!combustivel || combustivel === "Flex") {
+        if (pageText.includes("elétrico") || pageText.includes("eletrico")) combustivel = "⚡ Elétrico"
+        else if (pageText.includes("kit gás") || pageText.includes("gnv")) combustivel = "🟡 Flex + GNV"
+        else if (pageText.includes("híbrido") || pageText.includes("hibrido")) combustivel = "🟢 Híbrido"
+        else if (pageText.includes("gasolina")) combustivel = "⛽ Gasolina"
+        else if (pageText.includes("diesel")) combustivel = "🔴 Diesel"
+        else if (pageText.includes("flex") || pageText.includes("fle")) combustivel = "✅ Flex"
+        else if (pageText.includes("álcool") || pageText.includes("etanol")) combustivel = "🌿 Etanol"
+      }
+    } catch (e) {
+      combustivel = "Flex"
+    }
+
+    // ── [VARIÁVEL CRÍTICA 6: FIPE / VALOR DE MERCADO] ────────────────────────
+    let fipeScraped = null
+    try {
+      for (const [lbl, val] of Object.entries(infoItemsMap)) {
+        if (/valor\s*mercado|fipe/i.test(lbl)) {
+          fipeScraped = extractNumber(val)
+          if (fipeScraped) break
+        }
+      }
+      if (!fipeScraped && selectors?.fipe) {
+        fipeScraped = extractNumber(trySelectors(selectors.fipe))
+      }
+    } catch (e) {
+      fipeScraped = null
+    }
+
+    // ── [VARIÁVEL CRÍTICA 7: TAXAS E CUSTOS] ─────────────────────────────────
     let comissaoAuto = false
     let comissaoPage = null
-    if (selectors.custos?.comissao) {
-      comissaoPage = extractPct(trySelectors([selectors.custos.comissao]))
-      if (comissaoPage) comissaoAuto = true
-    }
+    let depositoBens = null
+    let taxaRemocao = null
+    let taxaVistoria = null
+    let taxaDespachante = null
 
-    const depositoBens = selectors.custos?.deposito
-      ? extractNumber(trySelectors([selectors.custos.deposito]))
-      : null
-    const taxaRemocao = selectors.custos?.remocao
-      ? extractNumber(trySelectors([selectors.custos.remocao]))
-      : null
-    const taxaVistoria = selectors.custos?.vistoria
-      ? extractNumber(trySelectors([selectors.custos.vistoria]))
-      : null
-    const taxaDespachante = selectors.custos?.despachante
-      ? extractNumber(trySelectors([selectors.custos.despachante]))
-      : null
-
-    if (!km) {
-      const kmMatch = document.body.innerText.match(/([\d.]+)\s*km/i)
-      if (kmMatch) km = extractKM(kmMatch[1], milesMode)
-    }
-
-    const pageText = document.body.innerText.toLowerCase()
-    let combustivel = "Não identificado"
-    if (combustRaw) combustivel = combustRaw.trim()
-    else if (pageText.includes("elétrico") || pageText.includes("eletrico"))
-      combustivel = "⚡ Elétrico"
-    else if (pageText.includes("kit gás") || pageText.includes("gnv"))
-      combustivel = "🟡 Flex + GNV"
-    else if (pageText.includes("híbrido") || pageText.includes("hibrido"))
-      combustivel = "🟢 Híbrido"
-    else if (pageText.includes("gasolina")) combustivel = "⛽ Gasolina"
-    else if (pageText.includes("diesel")) combustivel = "🔴 Diesel"
-    else if (pageText.includes("flex")) combustivel = "✅ Flex"
-    else if (pageText.includes("álcool") || pageText.includes("etanol"))
-      combustivel = "🌿 Etanol"
-
-    if (!lance) {
-      const matches = pageText.match(/r\$\s*[\d.,]+/gi)
-      if (matches) {
-        const valores = matches
-          .map((m) => extractNumber(m))
-          .filter((v) => v && v > 1000 && v < 500000)
-        if (valores.length) lance = Math.min(...valores)
+    try {
+      if (selectors?.custos?.comissao) {
+        comissaoPage = extractPct(trySelectors([selectors.custos.comissao]))
+        if (comissaoPage) comissaoAuto = true
       }
-    }
+    } catch (_) {}
 
-    const modelo = modeloRaw
-      ? modeloRaw.replace(/\s+/g, " ").substring(0, 60)
-      : "Veículo não identificado"
+    try {
+      if (selectors?.custos?.deposito) depositoBens = extractNumber(trySelectors([selectors.custos.deposito]))
+    } catch (_) {}
+
+    try {
+      if (selectors?.custos?.remocao) taxaRemocao = extractNumber(trySelectors([selectors.custos.remocao]))
+    } catch (_) {}
+
+    try {
+      if (selectors?.custos?.vistoria) taxaVistoria = extractNumber(trySelectors([selectors.custos.vistoria]))
+    } catch (_) {}
+
+    try {
+      if (selectors?.custos?.despachante) taxaDespachante = extractNumber(trySelectors([selectors.custos.despachante]))
+    } catch (_) {}
+
+    // ── [VARIÁVEL 8: ORIGEM / RETOMADA / LAUDO] ──────────────────────────────
+    let tipoRetomada = ""
+    try {
+      for (const [lbl, val] of Object.entries(infoItemsMap)) {
+        if (/retomada|origem/i.test(lbl)) {
+          tipoRetomada = val
+          break
+        }
+      }
+    } catch (_) {}
+
+    // ── [CÁLCULOS DERIVADOS RESILIENTES] ─────────────────────────────────────
     const idadeVeiculo = ano ? Math.max(1, anoAtual - ano) : null
-    const kmAno = km && idadeVeiculo ? Math.round(km / idadeVeiculo) : null
+    const kmAno = (km != null && km > 0 && idadeVeiculo) ? Math.round(km / idadeVeiculo) : null
     const kmMes = kmAno ? Math.round(kmAno / 12) : null
 
     return {
@@ -493,8 +814,9 @@
       taxaRemocao,
       taxaVistoria,
       taxaDespachante,
+      tipoRetomada,
       milesMode,
-      fonte: "DOM"
+      fonte: Object.keys(infoItemsMap).length > 0 ? "DOM (Layout 2026)" : jsonLd ? "JSON-LD" : "DOM"
     }
   }
 
@@ -509,7 +831,8 @@
     const { lance, fipeScraped } = dados
     const fipe = fipeOverride ?? fipeScraped ?? CONFIG.fipeMock
     const margem = margemOverride ?? CONFIG.margemRevenda
-    const incremento = incrementoOverride ?? CONFIG.incrementoLance
+    const incremento =
+      incrementoOverride ?? dados.incremento ?? CONFIG.incrementoLance
 
     const custoConserto = custosOverride.custoConserto ?? CONFIG.custoConserto
     const custoDocumentacao =
@@ -524,10 +847,12 @@
     const comissao = lance ? lance * comissaoPct : 0
 
     const extrasDetectados =
-      (dados.depositoBens || 0) +
-      (dados.taxaRemocao || 0) +
-      (dados.taxaVistoria || 0) +
-      (dados.taxaDespachante || 0)
+      dados.totalDespesas && dados.totalDespesas > 0
+        ? dados.totalDespesas
+        : (dados.depositoBens || 0) +
+          (dados.taxaRemocao || 0) +
+          (dados.taxaVistoria || 0) +
+          (dados.taxaDespachante || 0)
     const taxaPatioEfetiva =
       extrasDetectados > 0 ? extrasDetectados : CONFIG.taxaPatio
 
@@ -577,7 +902,7 @@
   }
 
   function classifyKmAno(kmAno) {
-    if (!kmAno) return { label: "— Não calculado", color: "#888", emoji: "❓" }
+    if (!kmAno) return { label: "— KM não informada", color: "#888", emoji: "❓" }
     if (kmAno < 10000)
       return {
         label: `${kmAno.toLocaleString("pt-BR")} km/ano — Uso Particular`,
@@ -618,6 +943,28 @@
     return { label: "EVITAR", color: "#ef4444" }
   }
 
+  // ─── COMPONENTE MODULAR TOOLTIP ────────────────────────────────────────────
+  /**
+   * Componente reutilizável de Tooltip
+   * @param {Object} props
+   * @param {string} props.content - Conteúdo HTML ou texto do tooltip
+   * @param {string} [props.icon="ℹ️"] - Ícone do disparador (❓, ℹ️, etc)
+   * @param {string} [props.position="top"] - Posicionamento relativo ('top' | 'bottom')
+   * @returns {string} String HTML do componente
+   */
+  function renderTooltip({ content, icon = "ℹ️", position = "top" }) {
+    const safeContent = String(content).replace(/"/g, "&quot;")
+    return `
+      <span class="li-tooltip-container li-tooltip-${position}" tabindex="0" role="tooltip" aria-label="${safeContent}">
+        <span class="li-tooltip-trigger">${icon}</span>
+        <span class="li-tooltip-box">
+          <span class="li-tooltip-content">${content}</span>
+          <span class="li-tooltip-arrow"></span>
+        </span>
+      </span>
+    `.trim()
+  }
+
   // ─── FORMATAÇÃO ────────────────────────────────────────────────────────────
   const BRL = (v) =>
     v != null
@@ -651,6 +998,13 @@
     panel.setAttribute("data-version", "1.0.0")
     panel.setAttribute("data-lote-id", loteId)
 
+    if (panelState.position) {
+      panel.style.setProperty("left", panelState.position.left, "important")
+      panel.style.setProperty("top", panelState.position.top, "important")
+      panel.style.setProperty("right", "auto", "important")
+      panel.style.setProperty("bottom", "auto", "important")
+    }
+
     panel.innerHTML = `
       <div class="li-header">
         <div class="li-brand">
@@ -661,12 +1015,12 @@
         <div class="li-controls">
           <button class="li-btn-print"   title="Imprimir análise">🖨️</button>
           <button class="li-btn-refresh" title="Atualizar dados">↻</button>
-          <button class="li-btn-minimize" title="Minimizar">−</button>
+          <button class="li-btn-minimize" title="${panelState.isMinimized ? "Expandir" : "Minimizar"}">${panelState.isMinimized ? "+" : "−"}</button>
           <button class="li-btn-close"   title="Fechar">×</button>
         </div>
       </div>
 
-      <div class="li-body">
+      <div class="li-body ${panelState.isMinimized ? "li-collapsed" : ""}">
         <div class="li-vehicle-name">${dados.modelo}</div>
         <div class="li-score-row">
           <div class="li-score-ring" style="background: ${scoreColor}">
@@ -759,6 +1113,7 @@
         <div class="li-section-content" data-section-content="fipe">
         <div class="li-fipe-edit-box">
           <span class="li-item-label">FIPE Referência ${dados.fipeScraped ? '<span class="li-auto-tag">detectada</span>' : '<span class="li-hint-inline">— editável</span>'}</span>
+          ${dados.fipeNome ? `<div class="li-hint" style="font-size:11px; margin-top:2px; margin-bottom:4px; color:#f0ba32;">📋 ${dados.fipeNome}</div>` : ""}
           <div class="li-fipe-row">
             <input id="lm-fipe-input" class="li-fipe-input" type="number"
               placeholder="${BRL(calc.fipe)}" value="${fipePanel ?? (calc.fipe || "")}"/>
@@ -778,14 +1133,20 @@
           <span class="li-item-label">Incremento por Lance <span class="li-hint-inline">— editável</span></span>
           <div class="li-margem-row">
             <input id="lm-incremento-input" class="li-fipe-input" type="number"
-              min="50" step="50" placeholder="${CONFIG.incrementoLance}" value="${incrementoPanel ?? CONFIG.incrementoLance}"/>
+              min="50" step="50" placeholder="${CONFIG.incrementoLance}" value="${incrementoPanel ?? (dados.incremento || CONFIG.incrementoLance)}"/>
           </div>
           <span class="li-hint">Usado para calcular lances restantes até o limite.</span>
         </div>
 
         <div class="li-grid" style="margin-top: 8px">
           <div class="li-item">
-            <span class="li-item-label">Preço Limite</span>
+            <span class="li-item-label">
+              Preço Limite
+              ${renderTooltip({
+                content: "<strong>Fórmula:</strong><br/>(FIPE - Margem de Revenda) - Custos Estimados = Preço Limite",
+                icon: "ℹ️"
+              })}
+            </span>
             <span class="li-item-value li-limit">${BRL(calc.precoLimite)}</span>
           </div>
           <div class="li-item">
@@ -844,15 +1205,33 @@
             <span class="li-item-value">${dados.kmMes ? `${NUM(dados.kmMes)} km/mês` : "—"}</span>
           </div>
           <div class="li-item li-item-full">
-            <span class="li-item-label">Classificação de Uso</span>
+            <span class="li-item-label">
+              Classificação de Uso
+              ${renderTooltip({
+                content: `<strong>Como calculamos?</strong> Dividimos a KM total pela idade do veículo (${dados.idadeVeiculo || 1} anos). A média mensal é a anual dividida por 12. Identifica se o veículo era de frota, aplicativo ou uso particular.`,
+                icon: "❓"
+              })}
+            </span>
             <span class="li-km-badge" style="color:${kmInfo.color}; border-color:${kmInfo.color}40; background:${kmInfo.color}15">
               ${kmInfo.emoji} ${kmInfo.label}
             </span>
           </div>
-        </div>
-
-        <div class="li-km-explanation">
-          💡 <strong>Como calculamos?</strong> Dividimos a KM total pela idade do veículo (${dados.idadeVeiculo || 1} anos). A média mensal é a anual dividida por 12. Isso ajuda a identificar se o carro era de frota, aplicativo ou uso particular.
+          ${
+            dados.tipoRetomada
+              ? `<div class="li-item li-item-full">
+                  <span class="li-item-label">Origem / Retomada</span>
+                  <span class="li-item-value" style="font-size:12px; font-weight:600; color:#e2e8f0;">🏦 ${dados.tipoRetomada}</span>
+                </div>`
+              : ""
+          }
+          ${
+            dados.laudo
+              ? `<div class="li-item li-item-full">
+                  <span class="li-item-label">Laudo Cautelar</span>
+                  <span class="li-item-value" style="font-size:12px; font-weight:600; color:${dados.laudo.includes("APROVADO") ? "#22c55e" : "#f59e0b"};">📑 ${dados.laudo}</span>
+                </div>`
+              : ""
+          }
         </div>
         </div>
 
@@ -917,36 +1296,70 @@
   }
 
   // ─── INJEÇÃO E ATUALIZAÇÃO ─────────────────────────────────────────────────
-  function renderPanel() {
-    const existing = document.getElementById("leilometro-panel")
-    if (existing) existing.remove()
+  let isRendering = false
+  async function renderPanel(forceRefresh = false, fromObserver = false) {
+    if (isRendering) return
+    if (panelState.isClosedByUser && !forceRefresh) return
+    if (panelState.isDragging) return
 
-    const loteId = getLoteId()
-    const loteData = loadLote(loteId)
-    const dados = scrapePageData()
+    // Se o usuário estiver focado ou digitando em algum campo do painel, não recria o painel
+    const activeEl = document.activeElement
+    if (fromObserver && activeEl && activeEl.closest("#leilometro-panel")) return
 
-    if (!dados.ano && loteData?.ano) dados.ano = parseInt(loteData.ano)
-    if (!dados.km && loteData?.km) dados.km = parseInt(loteData.km)
+    isRendering = true
+    try {
+      const loteId = getLoteId()
+      const loteData = loadLote(loteId)
 
-    const fipe = loteData?.fipe ?? dados.fipeScraped ?? CONFIG.fipeMock ?? null
-    const marg = loteData?.marg ?? CONFIG.margemRevenda
-    const incremento = loteData?.incremento ?? null
-    const custosOverride = {
-      custoConserto: loteData?.custoConserto,
-      custoDocumentacao: loteData?.custoDocumentacao,
-      custoIPVA: loteData?.custoIPVA
+      // Preserva scroll e posição atual antes de remover
+      const existing = document.getElementById("leilometro-panel")
+      if (existing) {
+        const bodyEl = existing.querySelector(".li-body")
+        if (bodyEl) panelState.scroll = bodyEl.scrollTop
+        if (existing.style.left && existing.style.top) {
+          panelState.position = {
+            left: existing.style.left,
+            top: existing.style.top
+          }
+        }
+        existing.remove()
+      }
+
+      const dados = await scrapePageData(loteId, forceRefresh)
+      panelState.lastKnownLance = dados.lance
+
+      if (!dados.ano && loteData?.ano) dados.ano = parseInt(loteData.ano)
+      if (!dados.km && loteData?.km) dados.km = parseInt(loteData.km)
+
+      const fipe = loteData?.fipe ?? dados.fipeScraped ?? CONFIG.fipeMock ?? null
+      const marg = loteData?.marg ?? CONFIG.margemRevenda
+      const incremento = loteData?.incremento ?? dados.incremento ?? null
+      const custosOverride = {
+        custoConserto: loteData?.custoConserto,
+        custoDocumentacao: loteData?.custoDocumentacao,
+        custoIPVA: loteData?.custoIPVA
+      }
+      const calc = calcularOportunidade(
+        dados,
+        fipe,
+        marg,
+        incremento,
+        custosOverride
+      )
+      const panel = createPanel(dados, calc, loteId, loteData)
+
+      document.body.appendChild(panel)
+
+      // Restaura o scroll do corpo do painel
+      const newBody = panel.querySelector(".li-body")
+      if (newBody && panelState.scroll > 0) {
+        newBody.scrollTop = panelState.scroll
+      }
+
+      attachEventListeners(panel, dados, calc, loteId)
+    } finally {
+      isRendering = false
     }
-    const calc = calcularOportunidade(
-      dados,
-      fipe,
-      marg,
-      incremento,
-      custosOverride
-    )
-    const panel = createPanel(dados, calc, loteId, loteData)
-
-    document.body.appendChild(panel)
-    attachEventListeners(panel, dados, calc, loteId)
   }
 
   // ─── EVENTOS ───────────────────────────────────────────────────────────────
@@ -956,15 +1369,29 @@
     const btnRefresh = panel.querySelector(".li-btn-refresh")
     const body = panel.querySelector(".li-body")
 
-    btnClose?.addEventListener("click", () => panel.remove())
-    btnRefresh?.addEventListener("click", () => window.location.reload())
-
-    let minimized = false
-    btnMinimize?.addEventListener("click", () => {
-      minimized = !minimized
-      body.classList.toggle("li-collapsed", minimized)
-      btnMinimize.textContent = minimized ? "+" : "−"
+    btnClose?.addEventListener("click", () => {
+      panelState.isClosedByUser = true
+      panel.remove()
     })
+
+    btnRefresh?.addEventListener("click", () => renderPanel(true))
+
+    btnMinimize?.addEventListener("click", () => {
+      panelState.isMinimized = !panelState.isMinimized
+      body?.classList.toggle("li-collapsed", panelState.isMinimized)
+      if (btnMinimize) {
+        btnMinimize.textContent = panelState.isMinimized ? "+" : "−"
+        btnMinimize.title = panelState.isMinimized ? "Expandir" : "Minimizar"
+      }
+    })
+
+    body?.addEventListener(
+      "scroll",
+      () => {
+        panelState.scroll = body.scrollTop
+      },
+      { passive: true }
+    )
 
     makeDraggable(panel)
 
@@ -1185,6 +1612,9 @@ table{width:100%;border-collapse:collapse;}td{padding:7px 0;border-bottom:1px so
 <div class="sec"><div class="stitle">Dados do Veículo</div>
 <table>
   <tr><td>Modelo</td><td>${dados.modelo}</td></tr>
+  ${dados.fipeNome ? `<tr><td>FIPE Oficial</td><td>${dados.fipeNome}</td></tr>` : ""}
+  ${dados.tipoRetomada ? `<tr><td>Origem / Retomada</td><td>${dados.tipoRetomada}</td></tr>` : ""}
+  ${dados.laudo ? `<tr><td>Laudo Cautelar</td><td>${dados.laudo}</td></tr>` : ""}
   <tr><td>Ano</td><td>${dados.ano ?? "—"}</td></tr>
   <tr><td>KM${dados.milesMode ? " (conv. milhas)" : ""}</td><td>${dados.km ? `${NUM(dados.km)} km` : "—"}</td></tr>
   <tr><td>Combustível</td><td>${dados.combustivel}</td></tr>
@@ -1224,17 +1654,13 @@ ${notas ? `<div class="sec"><div class="stitle">Anotações do Avaliador</div><d
   // ─── ARRASTAR ──────────────────────────────────────────────────────────────
   function makeDraggable(el) {
     const header = el.querySelector(".li-header")
-    let isDragging = false,
-      startX,
-      startY,
-      origX,
-      origY
+    let startX, startY, origX, origY
 
     header.style.cursor = "grab"
 
     header.addEventListener("mousedown", (e) => {
       if (e.target.tagName === "BUTTON") return
-      isDragging = true
+      panelState.isDragging = true
       startX = e.clientX
       startY = e.clientY
       const rect = el.getBoundingClientRect()
@@ -1245,29 +1671,71 @@ ${notas ? `<div class="sec"><div class="stitle">Anotações do Avaliador</div><d
     })
 
     document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return
-      el.style.left = `${origX + e.clientX - startX}px`
-      el.style.top = `${origY + e.clientY - startY}px`
-      el.style.right = "auto"
-      el.style.bottom = "auto"
+      if (!panelState.isDragging) return
+      const newLeft = `${origX + e.clientX - startX}px`
+      const newTop = `${origY + e.clientY - startY}px`
+      el.style.setProperty("left", newLeft, "important")
+      el.style.setProperty("top", newTop, "important")
+      el.style.setProperty("right", "auto", "important")
+      el.style.setProperty("bottom", "auto", "important")
+      panelState.position = { left: newLeft, top: newTop }
     })
 
     document.addEventListener("mouseup", () => {
-      isDragging = false
-      header.style.cursor = "grab"
+      if (panelState.isDragging) {
+        panelState.isDragging = false
+        header.style.cursor = "grab"
+        panelState.position = { left: el.style.left, top: el.style.top }
+      }
     })
   }
 
   // ─── OBSERVER ──────────────────────────────────────────────────────────────
   function observeLanceChanges() {
     let debounceTimer
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      const panel = document.getElementById("leilometro-panel")
+      // Ignora mutações que acontecem DENTRO do painel do Leilômetro
+      const isInsidePanel = mutations.every(
+        (m) => panel && (panel === m.target || panel.contains(m.target))
+      )
+      if (isInsidePanel) return
+
+      // Não interrompe o usuário se estiver arrastando, digitando ou se fechou o painel
+      if (panelState.isClosedByUser) return
+      if (panelState.isDragging) return
+      if (
+        document.activeElement &&
+        document.activeElement.closest("#leilometro-panel")
+      )
+        return
+
       clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-        if (document.getElementById("leilometro-panel")) renderPanel()
-      }, 800)
+        if (!document.getElementById("leilometro-panel")) return
+        if (panelState.isClosedByUser || panelState.isDragging) return
+
+        // Só atualiza se o lance no DOM mudou de verdade
+        const selectors = SITE_SELECTORS[getSiteKey()]
+        const rawLance = trySelectors(selectors?.lance)
+        const currentLance = extractNumber(rawLance)
+
+        if (currentLance && currentLance !== panelState.lastKnownLance) {
+          panelState.lastKnownLance = currentLance
+          renderPanel(false, true)
+        }
+      }, 1200)
     })
-    observer.observe(document.body, {
+
+    // Observa o painel de lances específico se existir, senão observa o body
+    const lanceEl =
+      document.querySelector(".painel-lances-julho2026") ||
+      document.querySelector(".painel-lances-julho2026__valor") ||
+      document.querySelector(".valor-lote") ||
+      document.querySelector(".current-bid") ||
+      document.body
+
+    observer.observe(lanceEl, {
       subtree: true,
       childList: true,
       characterData: true
@@ -1292,8 +1760,13 @@ ${notas ? `<div class="sec"><div class="stitle">Anotações do Avaliador</div><d
     document.addEventListener("keydown", (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === "L") {
         const panel = document.getElementById("leilometro-panel")
-        if (panel) panel.remove()
-        else renderPanel()
+        if (panel) {
+          panelState.isClosedByUser = true
+          panel.remove()
+        } else {
+          panelState.isClosedByUser = false
+          renderPanel(true)
+        }
       }
     })
   }

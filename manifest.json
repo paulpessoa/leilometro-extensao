@@ -37,6 +37,9 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "*://*.leilo.com.br/*"
+  ],
   "externally_connectable": {
     "matches": [
       "https://www.leilometro.com.br/*"

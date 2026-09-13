@@ -8,8 +8,8 @@
 #leilometro-panel {
   all: initial;
   position: fixed !important;
-  top: 80px !important;
-  right: 16px !important;
+  top: 80px;
+  right: 16px;
   z-index: 2147483647 !important;
   width: 320px !important;
   background: #0d1117 !important;
@@ -376,7 +376,82 @@
   color: #f0ba32 !important;
 }
 
-/* ─── FIPE EDITÁVEL (v3) ─────────────────────────────────────────────────── */
+/* ─── TOOLTIP REUTILIZÁVEL ─────────────────────────────────────────────── */
+
+#leilometro-panel .li-tooltip-container {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: help !important;
+  vertical-align: middle !important;
+  margin-left: 4px !important;
+  user-select: none !important;
+}
+
+#leilometro-panel .li-tooltip-trigger {
+  font-size: 12px !important;
+  opacity: 0.75 !important;
+  line-height: 1 !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+
+#leilometro-panel .li-tooltip-container:hover .li-tooltip-trigger,
+#leilometro-panel .li-tooltip-container:focus .li-tooltip-trigger {
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+}
+
+#leilometro-panel .li-tooltip-box {
+  position: absolute !important;
+  bottom: calc(100% + 8px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(4px) !important;
+  background: #1c2128 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  color: #e6edf3 !important;
+  font-family: "Space Grotesk", system-ui, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  width: max-content !important;
+  max-width: 220px !important;
+  white-space: normal !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 186, 50, 0.25) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s !important;
+  text-align: left !important;
+}
+
+#leilometro-panel .li-tooltip-box strong {
+  color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-tooltip-arrow {
+  position: absolute !important;
+  top: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-left: 5px solid transparent !important;
+  border-right: 5px solid transparent !important;
+  border-top: 5px solid #30363d !important;
+}
+
+#leilometro-panel .li-tooltip-container:hover .li-tooltip-box,
+#leilometro-panel .li-tooltip-container:focus .li-tooltip-box {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+/* ─── INPUTS DE FORMULÁRIO (v3.1) ────────────────────────────────────────── */
 
 #leilometro-panel .li-fipe-edit-box,
 #leilometro-panel .li-margem-edit-box {
@@ -400,26 +475,47 @@
   margin-top: 4px !important;
 }
 
+#leilometro-panel .li-form-input,
 #leilometro-panel .li-fipe-input {
-  all: unset !important;
-  background: #0d1117 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  background: #21262d !important;
   border: 1px solid #30363d !important;
   border-radius: 6px !important;
   padding: 6px 10px !important;
   font-family: "JetBrains Mono", monospace !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
-  color: #e6edf3 !important;
-  width: 100% !important;
-  transition: border-color 0.15s !important;
+  color: #f0ba32 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+  outline: none !important;
 }
 
+#leilometro-panel .li-form-input:hover,
+#leilometro-panel .li-fipe-input:hover {
+  background: #262c36 !important;
+  border-color: #484f58 !important;
+}
+
+#leilometro-panel .li-form-input:focus,
 #leilometro-panel .li-fipe-input:focus {
+  background: #161b22 !important;
   border-color: #f0ba32 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(240, 186, 50, 0.25), inset 0 1px 2px rgba(0, 0, 0, 0.4) !important;
 }
 
 #leilometro-panel .li-input-sm {
-  width: 64px !important;
+  width: 76px !important;
+  padding: 5px 8px !important;
+  text-align: right !important;
+}
+
+#leilometro-panel .li-item .li-fipe-input,
+#leilometro-panel .li-item .li-form-input {
+  margin-top: 5px !important;
 }
 
 #leilometro-panel .li-fipe-preview {
