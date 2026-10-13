@@ -5,7 +5,12 @@
 > - A amostra da API mostrou que `valor.totalDespesas` já inclui a comissão. As taxas do leilão agora são a soma dos itens, e o custo no leilão bate com `totalAPagar`.
 > - O painel se remonta sozinho se o site o remover.
 >
-> Pendentes: Fase 5 (exceto o backup) e Fase 6 (publicação).
+> Também feitos depois:
+> - **Sinais de atenção:** lote sem vídeo, sem chave, sem laudo, laudo reprovado ou com observações.
+> - **Fase 5.1:** lembrete dos lotes marcados via `chrome.alarms`.
+> - **Fase 6:** preparação, com `scripts/empacotar.mjs` e `docs/CHROME_WEB_STORE.md`.
+>
+> Pendentes: o envio à loja (manual), FIPE automática (5.2), arremates registrados (5.4, depende de conhecer os valores de `situacao` depois do encerramento), selos na listagem (5.5) e outros leiloeiros (5.6).
 
 Este plano é para ser executado por um agente (Claude Opus) **uma fase por vez**, com commit ao final de cada fase e teste manual do usuário entre elas. Leia "Contexto" e "Regras" antes de começar qualquer fase.
 

@@ -113,6 +113,11 @@
             <label for="alertaFaltamLances">Avisar quando faltarem (lances para o teto)</label>
             <input type="number" id="alertaFaltamLances" data-cfg="alertaFaltamLances" min="1" max="50" step="1" />
           </div>
+          <div class="field">
+            <label for="lembreteMinutos">Lembrete dos lotes marcados (minutos antes do encerramento)</label>
+            <input type="number" id="lembreteMinutos" data-cfg="lembreteMinutos" min="0" max="240" step="5" />
+            <span class="hint">Vale para os lotes com ⏰ Lembrar no painel ou ★ no popup. Chega mesmo com a aba fechada (o Chrome precisa estar aberto). 0 desliga.</span>
+          </div>
         </div>
       </div>
       <p class="aviso" style="margin-top:14px">Durante o pregão, deixe a aba do lote aberta (pode ficar em segundo plano). O Chrome reduz a frequência de abas ocultas há muito tempo, mas os lances que o site mostra na tela continuam sendo detectados na hora.</p>

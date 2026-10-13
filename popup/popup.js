@@ -45,7 +45,15 @@
       .map((lot) => {
         const { snapshot: s, calc: c } = LM.calc.analisar(lot.snapshot || {}, lot.user || {}, config)
         const info = LM.calc.getScoreLabel(c.score)
-        const meta = [c.lance ? `<b>${BRL0(c.lance)}</b>` : null, s.ano, tempoRelativo(lot.updatedAt)].filter(Boolean).join(" · ")
+        const graves = LM.calc.sinaisDeAtencao(s).filter((x) => x.nivel === "alto")
+        const meta = [
+          graves.length ? `<span class="lot-alerta" title="${esc(graves.map((x) => x.titulo).join(" · "))}">⚠️ ${esc(graves[0].titulo.toLowerCase())}</span>` : null,
+          c.lance ? `<b>${BRL0(c.lance)}</b>` : null,
+          s.ano,
+          tempoRelativo(lot.updatedAt)
+        ]
+          .filter(Boolean)
+          .join(" · ")
         return `
         <div class="lot-item">
           <div class="lot-score" style="background:${c.score != null ? info.color : "#30363d"}" title="Score ${c.score ?? "—"}">${c.score ?? "—"}</div>
@@ -54,7 +62,7 @@
             <span class="lot-meta">${meta}</span>
           </div>
           <div class="lot-acoes">
-            <button class="ibtn ${lot.favorito ? "on" : ""}" data-fav="${esc(lot.id)}" title="Favorito">${lot.favorito ? "★" : "☆"}</button>
+            <button class="ibtn ${lot.favorito ? "on" : ""}" data-fav="${esc(lot.id)}" title="${lot.favorito ? "Desmarcar (cancela o lembrete)" : "Marcar e lembrar antes do encerramento"}">${lot.favorito ? "★" : "☆"}</button>
             <button class="ibtn ${lot.comparar ? "on" : ""}" data-cmp="${esc(lot.id)}" title="${lot.comparar ? "Tirar do comparador" : "Adicionar ao comparador"}">⚖️</button>
             <button class="ibtn del" data-del="${esc(lot.id)}" title="Remover">×</button>
           </div>

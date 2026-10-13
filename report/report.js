@@ -59,6 +59,7 @@
       ["Outros", s.taxaOutros]
     ].filter(([, v]) => v)
     const ia = lot.ai?.relatorio
+    const sinais = LM.calc.sinaisDeAtencao(s)
 
     return `
       <div class="folha" data-id="${esc(lot.id)}">
@@ -75,6 +76,17 @@
           </div>
         </div>
 
+        ${
+          sinais.length
+            ? `<div class="sec"><div class="stitle">Sinais de atenção</div>${sinais
+                .map(
+                  (x) =>
+                    `<div class="sinal ${x.nivel}">${x.icone} <strong>${esc(x.titulo)}</strong> — ${esc(x.detalhe)}</div>`
+                )
+                .join("")}</div>`
+            : ""
+        }
+
         <div class="sec"><div class="stitle">Veículo</div><table>
           ${linha("Ano modelo / fabricação", [s.ano, s.anoFabricacao].filter(Boolean).join(" / "))}
           ${linha("KM", s.km ? `${NUM(s.km)} km (${NUM(s.kmAno)} km/ano)` : "—")}
@@ -85,6 +97,7 @@
           ${linha("Comitente", esc(s.comitente))}
           ${linha("Laudo cautelar", s.laudo ? `${esc(s.laudo)}${s.laudoObs ? `<br/><small style="font-weight:400;white-space:pre-wrap">${esc(s.laudoObs)}</small>` : ""}` : null)}
           ${linha("Chave", s.possuiChave == null ? null : s.possuiChave ? "Possui" : "Não possui", s.possuiChave === false ? "red" : "")}
+          ${linha("Vídeo do lote", s.temVideo == null ? null : s.temVideo ? "Disponível" : "Sem vídeo", s.temVideo === false ? "red" : "")}
           ${linha("Encerramento previsto", s.dataFim ? tsStr(s.dataFim) : null)}
         </table></div>
 
@@ -149,6 +162,9 @@
           `📊 FIPE: ${BRL0(p.fipe)} · Limite: ${c.precoLimite > 0 ? BRL0(c.precoLimite) : "—"} · Lucro: ${BRL0(c.potencialLucro)}`,
           `⭐ Score: ${c.score ?? "—"} (${LM.calc.getScoreLabel(c.score).label}) · Uso: ${LM.calc.classifyKmAno(s.kmAno).curto}`,
           s.laudo ? `📑 Laudo: ${s.laudo}` : null,
+          ...LM.calc.sinaisDeAtencao(s)
+            .filter((x) => x.id !== "laudo-obs")
+            .map((x) => `⚠️ ${x.titulo}${x.id === "sem-video" ? " (pode não ligar/andar)" : ""}`),
           lot.user?.notas ? `📝 ${lot.user.notas}` : null,
           lot.url || null
         ]

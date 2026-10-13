@@ -86,6 +86,49 @@ test("API: taxas do leilão não incluem a comissão (totalDespesas já inclui)"
   assert.strictEqual(Math.round(r.custoArremate), amostra.valor.totalAPagar)
 })
 
+test("API: lote sem vídeo vira sinal de atenção alto (pode não ligar/andar)", () => {
+  const comVideo = api.snapshotDaApi(amostra)
+  assert.strictEqual(comVideo.temVideo, true)
+  assert.ok(!calc.sinaisDeAtencao(comVideo).some((x) => x.id === "sem-video"))
+
+  const semVideo = api.snapshotDaApi({ ...amostra, video: null })
+  assert.strictEqual(semVideo.temVideo, false)
+  const sinal = calc.sinaisDeAtencao(semVideo).find((x) => x.id === "sem-video")
+  assert.ok(sinal)
+  assert.strictEqual(sinal.nivel, "alto")
+
+  const vazio = api.snapshotDaApi({ ...amostra, video: "  " })
+  assert.strictEqual(vazio.temVideo, false)
+})
+
+test("sinais: sem chave, laudo reprovado e laudo com observações", () => {
+  const ids = (s) => calc.sinaisDeAtencao(s).map((x) => x.id)
+  assert.deepStrictEqual(ids({ possuiChave: false }), ["sem-chave"])
+  assert.deepStrictEqual(ids({ laudo: "REPROVADO", laudoObs: "x" }), ["laudo-reprovado"])
+  assert.deepStrictEqual(ids({ laudo: "APROVADO", laudoObs: "CORROSÃO" }), ["laudo-obs"])
+  assert.deepStrictEqual(ids({ laudo: "AUSENTE" }), ["sem-laudo"])
+  // dado ausente (ex.: lido só da página) não gera alerta
+  assert.deepStrictEqual(ids({}), [])
+})
+
+test("API: combustível abreviado em 3 letras", () => {
+  const n = api.normalizarCombustivel
+  assert.strictEqual(n("Fle"), "Flex")
+  assert.strictEqual(n("Die"), "Diesel")
+  assert.strictEqual(n("Gas"), "Gasolina")
+  assert.strictEqual(n("GNV"), "GNV")
+  assert.strictEqual(n("Ele"), "Elétrico")
+  assert.strictEqual(n("Alc"), "Etanol")
+  assert.strictEqual(n(null), null)
+})
+
+test("contexto da IA inclui o vídeo e os sinais", () => {
+  const s = api.snapshotDaApi({ ...amostra, video: null })
+  const ctx = calc.contextoIa(s, {}, CONFIG)
+  assert.strictEqual(ctx.veiculo.temVideo, false)
+  assert.ok(ctx.sinaisDeAtencao.some((x) => x.startsWith("Lote sem vídeo")))
+})
+
 test("API: campos do veículo e do lote", () => {
   const s = api.snapshotDaApi(amostra)
   assert.strictEqual(s.ano, 2021)

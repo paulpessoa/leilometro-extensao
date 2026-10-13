@@ -8,6 +8,8 @@ O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. 
 - **Preço limite:** o maior lance em que você ainda lucra a margem desejada, já descontando comissão, taxas e custos pós-arremate (conserto, documentação, IPVA).
 - **Meu teto:** um limite pessoal opcional, usado pelos alertas.
 - **Score de oportunidade (0–100)** e **análise de KM/ano** (particular, frota, aplicativo).
+- **Sinais de atenção:** lote **sem vídeo** (normalmente o carro não liga ou não anda), sem chave, sem laudo cautelar, laudo reprovado ou com observações. O score não muda, mas o selo de oportunidade avisa "com sinais de risco".
+- **Lembrete:** marque ⏰/★ e receba uma notificação X minutos antes do encerramento previsto, mesmo com a aba fechada.
 - **Modo Leilão:** botão "Ativar rastreio" durante o pregão. Apita quando faltam N lances para o teto, quando passa do teto (som crítico), quando o lance chega num valor escolhido e 1 minuto antes do encerramento previsto. Também envia notificação do sistema, muda o título da aba e mostra gráfico e ritmo dos lances.
 - **Modo compacto:** uma barra com lance, teto, lances restantes e score, colorida pela situação.
 - **Comparador:** até vários veículos lado a lado, com o melhor/pior de cada item destacado, edição de FIPE/teto/conserto na tabela e exportação para CSV.
@@ -46,6 +48,7 @@ Atalho: `Ctrl+Shift+L` abre/fecha o painel.
 | `styles.css` | Estilo do painel injetado |
 | `ui/pages.css` | Estilo das páginas da extensão |
 | `tests/` | Testes (`node --test "tests/*.test.js"`) |
+| `scripts/empacotar.mjs` | Gera o zip para a Chrome Web Store |
 | `docs/amostra-api-lote.json` | Resposta real da API, usada nos testes |
 
 Quando o site mudar o layout, veja `DIAGNOSTICO_LEILO.md` (seletores) e `content/scrape.js`.
@@ -65,12 +68,13 @@ document.dispatchEvent(new CustomEvent("leilometro:simular", { detail: 40000 }))
 
 ## 📦 Empacotar para a Chrome Web Store
 
-```powershell
-$files = Get-ChildItem -Exclude .git,docs,tests,*.md,*.zip
-Compress-Archive -Path $files -DestinationPath leilometro-1.1.0.zip -Force
+```bash
+node scripts/empacotar.mjs   # gera dist/leilometro-<versão>.zip
 ```
 
-Permissões: `storage` (dados locais), `notifications` (alertas do Modo Leilão), host `*.leilo.com.br` (ler o lote aberto) e, só se o usuário ativar a IA, `api.openai.com` ou `generativelanguage.googleapis.com` (permissões opcionais).
+Textos da ficha da loja, justificativas de permissão e formulário de privacidade: [docs/CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md).
+
+Permissões: `storage` (dados locais), `notifications` (alertas do Modo Leilão), `alarms` (lembrete antes do encerramento), host `*.leilo.com.br` (ler o lote aberto) e, só se o usuário ativar a IA, `api.openai.com` ou `generativelanguage.googleapis.com` (permissões opcionais).
 
 ## 📄 Licença
 

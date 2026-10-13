@@ -18,6 +18,18 @@
     { rotulo: "Origem", v: (a) => a.snapshot.tipoRetomada, texto: true },
     { rotulo: "Laudo cautelar", v: (a) => a.snapshot.laudo, texto: true },
     { rotulo: "Chave", v: (a) => (a.snapshot.possuiChave == null ? null : a.snapshot.possuiChave ? "Sim" : "Não"), texto: true },
+    {
+      rotulo: "Vídeo",
+      v: (a) => (a.snapshot.temVideo == null ? null : a.snapshot.temVideo ? "Sim" : "Não"),
+      fmt: (v) => (v === "Não" ? '<span style="color:#f87171">⚠️ Não</span>' : esc(v ?? "—")),
+      texto: true
+    },
+    {
+      rotulo: "Sinais de atenção",
+      v: (a) => LM.calc.sinaisDeAtencao(a.snapshot).map((x) => `${x.icone} ${x.titulo}`).join(" · ") || null,
+      fmt: (v) => (v ? `<span style="color:#f5c66b">${esc(v)}</span>` : '<span class="muted">nenhum</span>'),
+      texto: true
+    },
     { rotulo: "Local", v: (a) => a.snapshot.local, texto: true },
     { secao: "Leilão" },
     {

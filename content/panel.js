@@ -47,7 +47,12 @@
       .filter(Boolean)
       .map(esc)
     const fim = s.dataFim ? `<span class="li-fim" data-tick="fim"></span>` : ""
-    return `${partes.join(" · ")}${fim ? `<br/>${fim}` : ""}`
+    const min = Number(estado.config.lembreteMinutos) || 0
+    const lembrete =
+      estado.lot?.favorito && s.dataFim && min && s.dataFim - min * 60000 > Date.now()
+        ? `<br/><span class="li-lembrete">⏰ Lembrete às ${new Date(s.dataFim - min * 60000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>`
+        : ""
+    return `${partes.join(" · ")}${fim ? `<br/>${fim}` : ""}${lembrete}`
   }
 
   function fragScore() {
@@ -58,6 +63,7 @@
         ? `conic-gradient(${info.color} ${calc.score * 3.6}deg, #1e293b 0deg)`
         : "#1e293b"
     const semFipe = calc.precoLimite === null
+    const risco = LM.calc.sinaisDeAtencao(estado.analise.snapshot).some((x) => x.nivel === "alto")
     return `
       <div class="li-score-ring" style="background:${ring}">
         <div class="li-score-inner">
@@ -67,6 +73,24 @@
       </div>
       <div class="li-oport-badge" style="color:${info.color}; border-color:${info.color}40; background:${info.color}12">
         ${semFipe ? "SEM FIPE <strong>INFORME A FIPE</strong>" : `OPORTUNIDADE <strong>${info.label}</strong>`}
+        ${risco ? '<span class="li-badge-risco">⚠️ com sinais de risco — veja abaixo</span>' : ""}
+      </div>`
+  }
+
+  function fragSinais() {
+    const sinais = LM.calc.sinaisDeAtencao(estado.analise.snapshot)
+    if (!sinais.length) return ""
+    return `
+      <div class="li-sinais" role="note" aria-label="Sinais de atenção">
+        ${sinais
+          .map(
+            (x) => `
+          <div class="li-sinal li-sinal-${x.nivel}">
+            <span class="li-sinal-ico">${x.icone}</span>
+            <span><b>${esc(x.titulo)}</b><small>${esc(x.detalhe)}</small></span>
+          </div>`
+          )
+          .join("")}
       </div>`
   }
 
@@ -178,8 +202,13 @@
   function fragCompacto() {
     const { calc: c } = estado.analise
     const rastreando = LM.live?.ativo?.()
+    const graves = LM.calc.sinaisDeAtencao(estado.analise.snapshot).filter((x) => x.nivel === "alto")
+    const aviso = graves.length
+      ? `<span class="li-cb-alerta" title="${esc(graves.map((x) => x.titulo).join(" · "))}">⚠️</span>`
+      : ""
     return `
       <div class="li-cb li-cb-${corSituacao(c)}">
+        ${aviso}
         <button type="button" class="li-cb-live ${rastreando ? "li-on" : ""}" data-live-acao="toggle"
           title="${rastreando ? "Parar rastreio" : "Ativar rastreio e alertas"}" aria-label="${rastreando ? "Parar rastreio" : "Ativar rastreio"}">${rastreando ? '<span class="li-rec">●</span>' : "🔔"}</button>
         <span><small>Lance</small><b>${BRL0(c.lance)}</b></span>
@@ -192,6 +221,7 @@
   const FRAGMENTOS = {
     sub: fragSub,
     score: fragScore,
+    sinais: fragSinais,
     valores: fragValores,
     fipeAviso: fragFipeAviso,
     resultado: fragResultado,
@@ -264,6 +294,12 @@
       ],
       s.comitente && ["Comitente", esc(s.comitente)],
       s.possuiChave != null && ["Chave", s.possuiChave ? "🔑 Possui chave" : "⚠️ Sem chave"],
+      s.temVideo != null && [
+        "Vídeo",
+        s.temVideo
+          ? `🎥 Disponível${s.videoUrl && /^https:\/\//i.test(s.videoUrl) ? ` · <a class="li-link" href="${esc(s.videoUrl)}" target="_blank" rel="noopener">assistir ↗</a>` : ""}`
+          : '<span style="color:#f85149">⚠️ Sem vídeo — possível veículo que não liga/não anda</span>'
+      ],
       s.combustivel && ["Combustível", esc(s.combustivel)]
     ]
       .filter(Boolean)
@@ -298,6 +334,7 @@
         <div class="li-sub" data-frag="sub"></div>
 
         <div class="li-score-row" data-frag="score"></div>
+        <div data-frag="sinais"></div>
 
         <div class="li-divider"></div>
         ${secao("live", "🔔 MODO LEILÃO", '<div id="lm-live-root"></div>')}
@@ -401,6 +438,8 @@
         <div class="li-footer">
           <div class="li-footer-btns">
             <button type="button" class="li-btn-settings ${comparando ? "li-on" : ""}" data-acao="comparar">${comparando ? `✓ Comparando` : "➕ Comparar"}</button>
+            <button type="button" class="li-btn-settings ${estado.lot?.favorito ? "li-on" : ""}" data-acao="favorito"
+              title="Marca o lote (★) e avisa ${esc(estado.config.lembreteMinutos)} min antes do encerramento previsto, mesmo com a aba fechada">${estado.lot?.favorito ? "⏰ Lembrete ligado" : "⏰ Lembrar"}</button>
             <button type="button" class="li-btn-settings" data-acao="abrir-comparador" title="Abrir comparador">⚖️ ${estado.compararTotal || ""}</button>
             <button type="button" class="li-btn-settings" data-acao="relatorio">📄 Relatório</button>
             <button type="button" class="li-btn-reset" data-acao="limpar" title="Apagar dados salvos deste lote" aria-label="Apagar dados salvos deste lote">🗑️</button>
@@ -581,6 +620,11 @@
         btn.classList.toggle("li-on", novo)
         const cmp = panel.querySelector('[data-acao="abrir-comparador"]')
         if (cmp) cmp.textContent = `⚖️ ${Math.max(0, estado.compararTotal) || ""}`
+      } else if (acao === "favorito") {
+        const novo = !estado.lot?.favorito
+        await salvar({ favorito: novo })
+        btn.textContent = novo ? "⏰ Lembrete ligado" : "⏰ Lembrar"
+        btn.classList.toggle("li-on", novo)
       } else if (acao === "abrir-comparador") {
         LM.util.enviar({ type: "open", path: "compare/compare.html" })
       } else if (acao === "relatorio") {
@@ -701,7 +745,7 @@
     if (!estado.loteId || !ids.includes(estado.loteId) || !estado.analise) return
     const lot = await LM.storage.getLot(estado.loteId)
     const mudouUser = JSON.stringify(lot?.user || {}) !== JSON.stringify(estado.lot?.user || {})
-    const mudouComparar = !!lot?.comparar !== !!estado.lot?.comparar
+    const mudouComparar = !!lot?.comparar !== !!estado.lot?.comparar || !!lot?.favorito !== !!estado.lot?.favorito
     estado.lot = lot
     if (!lot || mudouComparar) {
       recalcular()
