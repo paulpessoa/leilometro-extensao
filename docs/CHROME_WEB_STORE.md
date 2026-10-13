@@ -102,29 +102,45 @@ Desenvolvido por QiSites | contato@qisites.com.br e contato@leilometro.com.br
 
 ## 3. Práticas de privacidade
 
-**Finalidade única:**
+Textos usados na publicação da v1.1.0 (cada campo aceita até 1.000 caracteres).
+
+**Descrição do único propósito:**
 
 ```
-Ajudar compradores de leilões de veículos a avaliar o lote aberto no site do leiloeiro, calculando custo real, preço limite e alertando sobre lances durante o pregão.
+Ajudar quem compra em leilões de veículos a avaliar e acompanhar o lote aberto no site do leiloeiro (leilo.com.br): um painel calcula o custo real de arrematação (lance, comissão e taxas), o preço limite para a margem desejada, o score de oportunidade e o uso do veículo por KM/ano, aponta sinais de risco do lote e, se o usuário ativar, avisa com som e notificação quando o lance se aproxima do teto dele ou quando o lote está para encerrar.
 ```
 
-**Justificativa de cada permissão:**
+**Justificativa de storage:**
 
-| Permissão | Justificativa |
-|---|---|
-| `storage` | Salvar no navegador as configurações do usuário (margem, custos), os lotes analisados, anotações e alertas. |
-| `notifications` | Avisar o usuário quando o lance atinge o teto ou o valor escolhido durante o Modo Leilão, inclusive com a aba em segundo plano. Só é usado depois que o usuário ativa o rastreio ou o lembrete. |
-| `alarms` | Agendar o lembrete que avisa alguns minutos antes do encerramento dos lotes que o usuário marcou. |
-| Host `*://*.leilo.com.br/*` | Exibir o painel na página do lote e ler os dados públicos do lote (lance, taxas, comissão, veículo) na página e na API pública do próprio site. |
-| Host opcional `https://api.openai.com/*` | Pedido só quando o usuário ativa o assistente de IA com a própria chave da OpenAI; envia as perguntas e os dados do lote ao provedor. |
-| Host opcional `https://generativelanguage.googleapis.com/*` | Mesmo uso acima, para quem escolher o Google Gemini. |
+```
+Usada para salvar no navegador do usuário: as configurações (margem de revenda, custos estimados, preferências de alerta) via chrome.storage.sync; e, via chrome.storage.local, os lotes que ele analisa (valores editados, anotações, alertas cadastrados e histórico de lances acompanhado), o estado do painel e, se ele ativar o assistente de IA, a chave de API dele. Os dados ficam só no navegador e não são enviados a servidores do desenvolvedor. O usuário pode exportar, importar ou apagar tudo na página de configurações.
+```
+
+**Justificativa de notifications:**
+
+```
+Usada para avisar o usuário durante um leilão ao vivo. Quando ele ativa o "Modo Leilão" num lote, a extensão mostra uma notificação do sistema quando o lance chega perto do teto definido por ele, passa do teto, atinge um valor que ele cadastrou ou quando falta 1 minuto para o encerramento. Também é usada para o lembrete opcional que avisa alguns minutos antes do encerramento de um lote que o usuário marcou. As notificações existem para que o aviso chegue mesmo com a aba do leilão em segundo plano. Nenhuma notificação é exibida sem o usuário ativar o rastreio ou marcar um lote, e todas podem ser desligadas nas configurações da extensão.
+```
+
+**Justificativa de alarms:**
+
+```
+Usada para agendar o lembrete opcional dos lotes que o usuário marca com "Lembrar": a extensão cria um alarme para alguns minutos antes do horário de encerramento previsto do lote (10 minutos por padrão, configurável) e, quando ele dispara, confere o horário atualizado no site do leiloeiro e mostra a notificação de lembrete. O alarme é necessário porque o lembrete precisa funcionar mesmo com a aba do lote fechada. Nenhum alarme é criado se o usuário não marcar um lote, e os alarmes são removidos quando ele desmarca o lote ou desliga o lembrete nas configurações.
+```
+
+**Justificativa de permissão do host:**
+
+```
+O acesso a *.leilo.com.br é necessário para exibir o painel na página do lote e ler os dados públicos desse lote (lance atual, comissão, taxas, informações do veículo e horário de encerramento), tanto na página quanto na API pública do próprio site (api.leilo.com.br), que é a mesma que o site usa para mostrar esses dados. Sem esse acesso a função principal não existe. A extensão também declara acesso opcional a api.openai.com e generativelanguage.googleapis.com: ele só é pedido ao usuário, com o aviso do Chrome, se ele ativar o assistente de IA com a própria chave de API, e serve apenas para enviar as perguntas dele ao provedor escolhido.
+```
 
 **Código remoto:** Não. Todo o JavaScript está no pacote; as chamadas às APIs de IA e do leiloeiro só trafegam dados (JSON).
 
 **Uso de dados** (formulário de divulgação):
-- Coleta dados de identificação pessoal, saúde, financeiros, autenticação, comunicações pessoais ou localização? **Não.**
-- "Conteúdo do site": **sim**. A extensão lê dados públicos do lote no site do leiloeiro para fazer os cálculos. Esses dados ficam no navegador. Só são enviados a terceiros (OpenAI/Google) se o usuário ativar o assistente de IA e fizer uma pergunta.
-- Marque as três declarações: não vende dados a terceiros; não usa nem transfere dados para fins não relacionados à finalidade única; não usa para avaliar crédito.
+- Marque só **Conteúdo do site**. A loja considera coleta o que sai do navegador; o único dado que sai é o conteúdo do lote (veículo, valores e anotações do usuário), enviado ao provedor de IA quando o usuário usa o assistente.
+- Deixe desmarcados os demais: identificação pessoal, saúde, financeiros, comunicações pessoais, localização, histórico da web e atividade do usuário. A IA não recebe URLs e não há rastreamento de cliques.
+- A chave de API vai só ao próprio provedor a que pertence, para autenticar a chamada. Não é coleta do desenvolvedor, então "Informações de autenticação" fica desmarcado. Marcar também não é errado, se quiser ser mais conservador.
+- Marque as três declarações: não vende dados a terceiros; não usa nem transfere dados para fins não relacionados ao único propósito; não usa para avaliar crédito.
 
 **URL da política de privacidade:** https://leilometro.com.br/privacidade
 
