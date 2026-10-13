@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bem-vindo ao Leilômetro</title>
+  <link rel="stylesheet" href="../ui/pages.css" />
+  <style>
+    .wrap { max-width: 860px; }
+    .hero { padding: 24px 0 8px; }
+    .hero h1 { font-size: 30px; line-height: 1.2; margin: 8px 0; }
+    .hero p { color: var(--text-2); font-size: 16px; max-width: 640px; }
+    .passos { display: grid; gap: 14px; margin-top: 24px; }
+    .passo { display: grid; grid-template-columns: 44px 1fr; gap: 14px; }
+    .num { width: 44px; height: 44px; border-radius: 50%; background: rgba(240,186,50,.12); border: 1px solid rgba(240,186,50,.4); color: var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 18px; }
+    .passo h3 { margin: 6px 0 6px; font-size: 16px; }
+    .passo p { margin: 0 0 10px; color: var(--text-2); }
+    kbd { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 4px; padding: 1px 6px; }
+    .extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .extras .card p { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+    .form-curto { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="marca">LEILÔMETRO</div>
+      <h1>Decida o lance pelos números, não pela emoção.</h1>
+      <p>O Leilômetro abre um painel na página do lote no leilo.com.br com o custo real, o preço limite para o seu lucro, a análise de KM e alertas sonoros durante o pregão.</p>
+    </div>
+
+    <div class="passos">
+      <div class="card passo">
+        <div class="num">1</div>
+        <div>
+          <h3>Ajuste sua margem e seus custos</h3>
+          <p>Esses valores definem o <b>preço limite</b>: o maior lance em que você ainda lucra o que quer. Dá para mudar depois e ajustar em cada lote.</p>
+          <div class="form-curto">
+            <div class="field"><label for="margemRevenda">Margem desejada (%)</label><input type="number" id="margemRevenda" data-cfg="margemRevenda" data-tipo="pct" min="0" max="60" /></div>
+            <div class="field"><label for="custoConserto">Conserto médio (R$)</label><input type="number" id="custoConserto" data-cfg="custoConserto" min="0" step="100" /></div>
+            <div class="field"><label for="custoDocumentacao">Documentação (R$)</label><input type="number" id="custoDocumentacao" data-cfg="custoDocumentacao" min="0" step="50" /></div>
+            <div class="field"><label for="custoIPVA">IPVA (R$)</label><input type="number" id="custoIPVA" data-cfg="custoIPVA" min="0" step="100" /></div>
+          </div>
+          <div class="msg" id="msgSalvo"></div>
+        </div>
+      </div>
+
+      <div class="card passo">
+        <div class="num">2</div>
+        <div>
+          <h3>Abra um lote no leilo.com.br</h3>
+          <p>O painel aparece sozinho no canto da tela. Arraste pelo título, recolha seções e use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> para abrir ou fechar. Comissão, taxas e FIPE são lidas do site; o que você editar fica salvo para aquele lote.</p>
+          <a class="btn btn-primary" href="https://leilo.com.br/" target="_blank" rel="noopener">Abrir leilo.com.br ↗</a>
+        </div>
+      </div>
+
+      <div class="card passo">
+        <div class="num">3</div>
+        <div>
+          <h3>No pregão, ligue o Modo Leilão</h3>
+          <p>Clique em <b>▶ Ativar rastreio</b> no painel. O Leilômetro acompanha os lances e <b>apita</b> quando faltarem poucos lances para o seu teto, quando passar do teto ou quando chegar num valor que você escolher. Também avisa por notificação se você estiver em outra aba. O modo compacto (<b>▭</b>) deixa só o essencial na tela.</p>
+          <button class="btn" id="testarSom">🔊 Ouvir o apito</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>Também dá para</h2>
+    <div class="extras">
+      <div class="card"><b>⚖️ Comparar veículos</b><p>Clique em “➕ Comparar” em vários lotes e veja tudo lado a lado, com o melhor de cada item destacado.</p></div>
+      <div class="card"><b>🤖 Perguntar para a IA</b><p>Conecte sua chave da OpenAI ou do Gemini e peça veredito, riscos, teto sugerido e checklist de vistoria. <a href="../options/options.html#ia">Configurar</a></p></div>
+      <div class="card"><b>📄 Gerar relatório</b><p>Imprima ou salve em PDF a análise do lote, ou copie um resumo para mandar no WhatsApp.</p></div>
+    </div>
+
+    <p class="muted" style="font-size:12px; margin-top:28px">🔒 Seus dados ficam só neste navegador. Nada é enviado a terceiros, a não ser que você ative o assistente de IA com a sua própria chave.</p>
+    <p class="rodape"><a href="../options/options.html">Todas as configurações</a> · Leilômetro v<span id="versao"></span></p>
+  </div>
+
+  <script src="../lib/util.js"></script>
+  <script src="../lib/calc.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/sound.js"></script>
+  <script src="welcome.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leilômetro — Comparador</title>
+  <link rel="stylesheet" href="../ui/pages.css" />
+  <style>
+    .wrap { max-width: 1400px; }
+    .tabela-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 640px; }
+    th, td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 13px; }
+    tbody th { position: sticky; left: 0; background: var(--surface); color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; z-index: 1; min-width: 150px; }
+    thead th { background: var(--surface-2); vertical-align: bottom; }
+    thead th:first-child { position: sticky; left: 0; z-index: 2; }
+    td { font-family: var(--mono); font-weight: 600; min-width: 170px; }
+    td.texto { font-family: var(--sans); font-weight: 500; font-size: 12px; }
+    td.melhor { background: rgba(34,197,94,.1); color: var(--green); }
+    td.pior { background: rgba(239,68,68,.08); color: #f87171; }
+    .cab { display: flex; flex-direction: column; gap: 6px; }
+    .cab img { width: 100%; max-width: 220px; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; background: var(--surface); }
+    .cab .nome { font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .cab .acoes { gap: 4px; }
+    .rank { display: inline-block; font-family: var(--sans); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(240,186,50,.15); color: var(--gold); border: 1px solid rgba(240,186,50,.35); }
+    .rank-motivo { font-family: var(--sans); font-size: 11px; font-weight: 400; color: var(--text-2); }
+    td input { width: 110px; padding: 4px 6px; font-size: 12px; }
+    .score { display: inline-block; min-width: 42px; text-align: center; padding: 2px 8px; border-radius: 6px; color: #0d1117; }
+    .vazio { text-align: center; padding: 50px 20px; }
+    .ia-resumo { margin-top: 16px; }
+    .ia-resumo p { margin: 0 0 8px; }
+    tr.secao th { background: var(--bg); color: var(--gold); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding-top: 14px; }
+    tr.secao td { background: var(--bg); }
+    .outros { margin-top: 28px; }
+    .outros-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+    .outro { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-size: 13px; }
+    .outro span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .md-h { font-weight: 700; color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topo">
+      <div>
+        <div class="marca">LEILÔMETRO <span>| COMPARADOR</span></div>
+        <h1 id="titulo">Comparar veículos</h1>
+      </div>
+      <div class="acoes">
+        <label class="check" title="Ordenar colunas"><span class="muted">Ordenar por</span>
+          <select id="ordem" style="width:auto">
+            <option value="score">Score</option>
+            <option value="lucro">Lucro potencial</option>
+            <option value="custo">Menor custo no leilão</option>
+            <option value="ia">Ranking da IA</option>
+          </select>
+        </label>
+        <button class="btn" id="atualizar">↻ Atualizar lances</button>
+        <button class="btn" id="ia">🤖 Analisar com IA</button>
+        <button class="btn" id="relatorio">📄 Relatório</button>
+        <button class="btn" id="csv">⬇️ CSV</button>
+        <a class="btn" href="../options/options.html">⚙️</a>
+      </div>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div id="conteudo"></div>
+    <div id="iaResumo"></div>
+
+    <div class="outros" id="outros"></div>
+    <p class="rodape">Os números usam a mesma regra do painel. Edite FIPE, teto e conserto direto na tabela.</p>
+  </div>
+
+  <script src="../lib/util.js"></script>
+  <script src="../lib/calc.js"></script>
+  <script src="../lib/api.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="compare.js"></script>
+</body>
+</html>

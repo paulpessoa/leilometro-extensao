@@ -123,7 +123,11 @@
 
 /* ─── BODY ───────────────────────────────────────────────────────────────── */
 
-#leilometro-panel .li-body.li-collapsed {
+#leilometro-panel.li-modo-minimizado .li-body,
+#leilometro-panel.li-modo-minimizado .li-compact,
+#leilometro-panel.li-modo-minimizado #lm-ai-root,
+#leilometro-panel.li-modo-compacto .li-body,
+#leilometro-panel.li-modo-compacto #lm-ai-root {
   display: none !important;
 }
 
@@ -599,7 +603,7 @@
 }
 
 #leilometro-panel .li-scrape-note {
-  display: none;
+  display: block !important;
   font-size: 10px !important;
   color: #8b949e !important;
   line-height: 1.4 !important;
@@ -726,4 +730,741 @@
   max-height: 0 !important;
   opacity: 0 !important;
   margin-bottom: 0 !important;
+}
+
+/* ═══ v1.1 ════════════════════════════════════════════════════════════════ */
+
+#leilometro-panel.li-arrastando,
+#leilometro-panel.li-arrastando * {
+  cursor: grabbing !important;
+}
+
+#leilometro-panel .li-header {
+  cursor: grab !important;
+}
+
+#leilometro-panel button {
+  font-family: inherit !important;
+}
+
+#leilometro-panel input[type="checkbox"] {
+  all: revert !important;
+  accent-color: #f0ba32 !important;
+  margin: 0 6px 0 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ─── SUBTÍTULO / ENCERRAMENTO ───────────────────────────────────────────── */
+
+#leilometro-panel .li-sub {
+  font-size: 11px !important;
+  color: #8b949e !important;
+  margin-bottom: 12px !important;
+  line-height: 1.5 !important;
+}
+
+#leilometro-panel .li-fim {
+  color: #c9d1d9 !important;
+}
+
+#leilometro-panel .li-fim.li-fim-perto {
+  color: #f85149 !important;
+  font-weight: 700 !important;
+  animation: li-pisca 1s infinite !important;
+}
+
+/* ─── TAGS DE ORIGEM ─────────────────────────────────────────────────────── */
+
+#leilometro-panel .li-tag {
+  font-size: 8px !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+}
+
+#leilometro-panel .li-tag-auto {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  color: #22c55e !important;
+}
+
+#leilometro-panel .li-tag-edit {
+  background: rgba(56, 139, 253, 0.15) !important;
+  border-color: rgba(56, 139, 253, 0.35) !important;
+  color: #58a6ff !important;
+}
+
+#leilometro-panel .li-tag-padrao {
+  background: rgba(139, 148, 158, 0.12) !important;
+  border-color: rgba(139, 148, 158, 0.3) !important;
+  color: #8b949e !important;
+}
+
+/* ─── BLOCOS AUXILIARES ──────────────────────────────────────────────────── */
+
+#leilometro-panel .li-aviso {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  border-radius: 7px !important;
+  padding: 8px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+  color: #f5c66b !important;
+  margin-bottom: 8px !important;
+}
+
+#leilometro-panel .li-row-2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+#leilometro-panel .li-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr !important;
+}
+
+#leilometro-panel .li-mt {
+  margin-top: 8px !important;
+}
+
+#leilometro-panel .li-item-value.li-item-text {
+  font-family: "Space Grotesk", system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+#leilometro-panel .li-item-value.li-lance {
+  font-size: 18px !important;
+  color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-pre {
+  white-space: pre-wrap !important;
+  font-weight: 400 !important;
+}
+
+#leilometro-panel .li-gold {
+  color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-red {
+  color: #f85149 !important;
+}
+
+#leilometro-panel code {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 10px !important;
+  background: #21262d !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-link {
+  color: #f0ba32 !important;
+  text-decoration: none !important;
+}
+
+#leilometro-panel .li-link:hover {
+  text-decoration: underline !important;
+}
+
+#leilometro-panel .li-link-btn {
+  all: unset !important;
+  color: #f0ba32 !important;
+  cursor: pointer !important;
+  font-size: inherit !important;
+  text-decoration: underline !important;
+}
+
+#leilometro-panel .li-teto-box {
+  border-color: rgba(56, 139, 253, 0.3) !important;
+}
+
+#leilometro-panel .li-btn-settings.li-on {
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.08) !important;
+}
+
+#leilometro-panel .li-footer-btns .li-btn-settings {
+  padding: 8px 6px !important;
+  font-size: 11px !important;
+}
+
+/* ─── MODO COMPACTO ──────────────────────────────────────────────────────── */
+
+#leilometro-panel .li-compact {
+  display: none !important;
+}
+
+#leilometro-panel.li-modo-compacto .li-compact {
+  display: block !important;
+}
+
+#leilometro-panel .li-cb {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  padding: 8px 10px !important;
+  border-left: 4px solid #8b949e !important;
+}
+
+#leilometro-panel .li-cb span {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+#leilometro-panel .li-cb small {
+  font-size: 9px !important;
+  color: #8b949e !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+#leilometro-panel .li-cb b {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 13px !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-cb-ok {
+  border-left-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.06) !important;
+}
+
+#leilometro-panel .li-cb-atencao {
+  border-left-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+#leilometro-panel .li-cb-perigo {
+  border-left-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+
+#leilometro-panel .li-cb-live {
+  all: unset !important;
+  cursor: pointer !important;
+  width: 26px !important;
+  height: 26px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  border: 1px solid #30363d !important;
+  font-size: 13px !important;
+}
+
+#leilometro-panel .li-cb-live.li-on {
+  border-color: #ef4444 !important;
+}
+
+/* ─── MODO LEILÃO ────────────────────────────────────────────────────────── */
+
+#leilometro-panel .li-live-top {
+  display: flex !important;
+  gap: 6px !important;
+  margin-bottom: 8px !important;
+}
+
+#leilometro-panel .li-live-btn {
+  all: unset !important;
+  flex: 1 !important;
+  text-align: center !important;
+  padding: 9px 12px !important;
+  border-radius: 7px !important;
+  background: #f0ba32 !important;
+  color: #0d1117 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: background 0.15s !important;
+}
+
+#leilometro-panel .li-live-btn:hover {
+  background: #f5c842 !important;
+}
+
+#leilometro-panel .li-live-on .li-live-btn {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f85149 !important;
+  border: 1px solid rgba(239, 68, 68, 0.5) !important;
+}
+
+#leilometro-panel .li-live-icon {
+  all: unset !important;
+  width: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 7px !important;
+  background: #21262d !important;
+  border: 1px solid #30363d !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-live-icon.li-add {
+  height: 30px !important;
+  flex-shrink: 0 !important;
+}
+
+#leilometro-panel .li-live-icon:hover {
+  border-color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-live-status {
+  font-size: 11px !important;
+  color: #c9d1d9 !important;
+  margin-bottom: 4px !important;
+}
+
+#leilometro-panel .li-rec {
+  color: #ef4444 !important;
+  animation: li-pisca 1.2s infinite !important;
+}
+
+#leilometro-panel .li-live-regras {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin: 10px 0 !important;
+}
+
+#leilometro-panel .li-check {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  color: #c9d1d9 !important;
+  cursor: pointer !important;
+  gap: 2px !important;
+  flex-wrap: wrap !important;
+}
+
+#leilometro-panel .li-check small {
+  color: #8b949e !important;
+  margin-left: 4px !important;
+}
+
+#leilometro-panel .li-mini-input {
+  all: unset !important;
+  width: 34px !important;
+  margin: 0 4px !important;
+  padding: 1px 4px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 4px !important;
+  background: #21262d !important;
+  color: #f0ba32 !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 11px !important;
+  text-align: center !important;
+}
+
+#leilometro-panel .li-live-add .li-margem-row {
+  margin-bottom: 6px !important;
+}
+
+#leilometro-panel .li-live-lista {
+  all: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+#leilometro-panel .li-live-lista li {
+  all: unset !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  padding: 5px 8px !important;
+  background: #161b22 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 6px !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 11px !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-live-lista li.li-atingido {
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
+#leilometro-panel .li-x {
+  all: unset !important;
+  cursor: pointer !important;
+  color: #8b949e !important;
+  font-size: 14px !important;
+  padding: 0 4px !important;
+  line-height: 1 !important;
+}
+
+#leilometro-panel .li-x:hover {
+  color: #f85149 !important;
+}
+
+#leilometro-panel .li-live-log {
+  margin-top: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  font-size: 10px !important;
+  color: #f5c66b !important;
+}
+
+#leilometro-panel .li-live-log .li-log-critico {
+  color: #f85149 !important;
+}
+
+#leilometro-panel .li-spark {
+  margin-top: 8px !important;
+  background: #161b22 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 7px !important;
+  padding: 6px 8px 4px !important;
+}
+
+#leilometro-panel .li-spark svg {
+  display: block !important;
+}
+
+#leilometro-panel .li-spark-legenda {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 9px !important;
+  color: #8b949e !important;
+}
+
+@keyframes li-pisca {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes li-flash-amarelo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(240, 186, 50, 0.1), 0 24px 48px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(240, 186, 50, 0.9), 0 0 40px rgba(240, 186, 50, 0.6);
+  }
+}
+
+@keyframes li-flash-vermelho {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1), 0 24px 48px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.95), 0 0 50px rgba(239, 68, 68, 0.7);
+  }
+}
+
+#leilometro-panel.li-flash {
+  animation: li-flash-amarelo 0.6s ease 5 !important;
+}
+
+#leilometro-panel.li-flash-critico {
+  animation: li-flash-vermelho 0.5s ease 6 !important;
+}
+
+/* ─── ASSISTENTE DE IA ───────────────────────────────────────────────────── */
+
+#leilometro-panel.li-ai-aberto .li-body {
+  min-height: 460px !important;
+}
+
+#leilometro-panel .li-ai-fab {
+  all: unset !important;
+  position: absolute !important;
+  right: 14px !important;
+  bottom: 14px !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 19px !important;
+  background: #f0ba32 !important;
+  color: #0d1117 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+  cursor: pointer !important;
+  z-index: 3 !important;
+  transition: transform 0.15s !important;
+}
+
+#leilometro-panel .li-ai-fab:hover {
+  transform: scale(1.08) !important;
+}
+
+#leilometro-panel .li-ai-fab.li-on {
+  background: #30363d !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-ai-drawer {
+  position: absolute !important;
+  top: 47px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 2 !important;
+  background: #0d1117 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#leilometro-panel .li-ai-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #21262d !important;
+  font-size: 12px !important;
+}
+
+#leilometro-panel .li-ai-head small {
+  flex: 1 !important;
+  color: #8b949e !important;
+  font-size: 10px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#leilometro-panel .li-ai-msgs {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #21262d transparent !important;
+  user-select: text !important;
+}
+
+#leilometro-panel .li-ai-msg {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  max-width: 92% !important;
+  word-wrap: break-word !important;
+}
+
+#leilometro-panel .li-ai-user {
+  align-self: flex-end !important;
+  background: rgba(240, 186, 50, 0.14) !important;
+  border: 1px solid rgba(240, 186, 50, 0.3) !important;
+  color: #f5d77a !important;
+  white-space: pre-wrap !important;
+}
+
+#leilometro-panel .li-ai-bot {
+  align-self: flex-start !important;
+  background: #161b22 !important;
+  border: 1px solid #21262d !important;
+  color: #e6edf3 !important;
+}
+
+#leilometro-panel .li-ai-erro {
+  align-self: flex-start !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #fca5a5 !important;
+}
+
+#leilometro-panel .li-ai-msg p {
+  all: unset !important;
+  display: block !important;
+  margin: 0 0 6px !important;
+}
+
+#leilometro-panel .li-ai-msg .md-h {
+  font-weight: 700 !important;
+  color: #f0ba32 !important;
+  margin-top: 8px !important;
+}
+
+#leilometro-panel .li-ai-msg ul {
+  all: unset !important;
+  display: block !important;
+  margin: 0 0 6px !important;
+  padding-left: 14px !important;
+}
+
+#leilometro-panel .li-ai-msg li {
+  all: unset !important;
+  display: list-item !important;
+  list-style: disc !important;
+  margin-bottom: 3px !important;
+}
+
+#leilometro-panel .li-ai-msg strong {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+#leilometro-panel .li-ai-meta {
+  font-size: 9px !important;
+  color: #6e7681 !important;
+  margin-top: 4px !important;
+}
+
+#leilometro-panel .li-ai-veredito {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  border: 1px solid !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  margin-bottom: 8px !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  letter-spacing: 1px !important;
+}
+
+#leilometro-panel .li-ai-veredito small {
+  font-size: 10px !important;
+  color: #8b949e !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+#leilometro-panel .li-ai-usar {
+  all: unset !important;
+  display: inline-block !important;
+  margin: 2px 0 6px !important;
+  padding: 4px 10px !important;
+  border-radius: 5px !important;
+  background: #f0ba32 !important;
+  color: #0d1117 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+#leilometro-panel .li-ai-chips {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  padding: 8px 60px 6px 14px !important;
+  border-top: 1px solid #21262d !important;
+}
+
+#leilometro-panel .li-ai-chip {
+  all: unset !important;
+  font-size: 10px !important;
+  padding: 4px 8px !important;
+  border-radius: 12px !important;
+  border: 1px solid #30363d !important;
+  background: #161b22 !important;
+  color: #c9d1d9 !important;
+  cursor: pointer !important;
+}
+
+#leilometro-panel .li-ai-chip:hover {
+  border-color: #f0ba32 !important;
+  color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-ai-chip[disabled] {
+  opacity: 0.4 !important;
+  cursor: default !important;
+}
+
+#leilometro-panel .li-ai-form {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 0 60px 14px 14px !important;
+  margin: 0 !important;
+}
+
+#leilometro-panel .li-ai-form textarea {
+  all: unset !important;
+  flex: 1 !important;
+  min-height: 34px !important;
+  padding: 7px 9px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 7px !important;
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+  font-size: 12px !important;
+  font-family: "Space Grotesk", system-ui, sans-serif !important;
+  line-height: 1.4 !important;
+  white-space: pre-wrap !important;
+}
+
+#leilometro-panel .li-ai-form textarea:focus {
+  border-color: #f0ba32 !important;
+}
+
+#leilometro-panel .li-ai-form button {
+  all: unset !important;
+  width: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 7px !important;
+  background: #21262d !important;
+  border: 1px solid #30363d !important;
+  color: #f0ba32 !important;
+  cursor: pointer !important;
+}
+
+#leilometro-panel .li-ai-vazio {
+  padding: 16px 14px !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  color: #c9d1d9 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+#leilometro-panel .li-ai-vazio p {
+  all: unset !important;
+  display: block !important;
+}
+
+#leilometro-panel .li-ai-pensando {
+  display: flex !important;
+  gap: 4px !important;
+}
+
+#leilometro-panel .li-ai-pensando span {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #f0ba32 !important;
+  animation: li-pisca 1s infinite !important;
+}
+
+#leilometro-panel .li-ai-pensando span:nth-child(2) {
+  animation-delay: 0.2s !important;
+}
+
+#leilometro-panel .li-ai-pensando span:nth-child(3) {
+  animation-delay: 0.4s !important;
+}
+
+/* espaço para o botão 🤖 não cobrir o rodapé */
+#leilometro-panel .li-footer {
+  padding-bottom: 46px !important;
 }

@@ -7,14 +7,10 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      width: 340px;
+      width: 360px;
       background: #0d1117;
       color: #e6edf3;
       font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -26,35 +22,37 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 18px;
+      padding: 12px 16px;
       background: #161b22;
       border-bottom: 1px solid #21262d;
     }
 
-    .header-text h1 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      color: #f0ba32;
-      font-weight: 700;
+    .header-text h1 { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #f0ba32; font-weight: 700; }
+    .header-text p { font-size: 10px; color: #8b949e; margin-top: 1px; }
+
+    .header-btns { display: flex; gap: 6px; }
+
+    .hbtn {
+      all: unset;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #e6edf3;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .header-text h1 span {
-      color: #e8edf2;
-      opacity: 0.5;
-    }
+    .hbtn:hover { border-color: #f0ba32; }
 
-    .header-text p {
-      font-size: 10px;
-      color: #8b949e;
-      margin-top: 1px;
-    }
+    .hbtn b { font-family: 'JetBrains Mono', monospace; color: #f0ba32; }
 
     /* ── TABS ── */
-    .tabs {
-      display: flex;
-      background: #161b22;
-      border-bottom: 1px solid #21262d;
-    }
+    .tabs { display: flex; background: #161b22; border-bottom: 1px solid #21262d; }
 
     .tab {
       flex: 1;
@@ -66,260 +64,96 @@
       color: #6e7681;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: color .15s, border-color .15s;
       text-transform: uppercase;
       user-select: none;
     }
 
-    .tab:hover {
-      color: #c9d1d9;
-    }
+    .tab:hover { color: #c9d1d9; }
+    .tab.active { color: #f0ba32; border-bottom-color: #f0ba32; }
 
-    .tab.active {
-      color: #f0ba32;
-      border-bottom-color: #f0ba32;
-    }
-
-    /* ── PANELS ── */
-    .panel {
-      display: none;
-    }
-
-    .panel.active {
-      display: block;
-    }
+    .panel { display: none; }
+    .panel.active { display: block; }
 
     /* ── LOTES ── */
-    .lots-wrap {
-      padding: 14px 18px;
-    }
+    .lots-wrap { padding: 12px 14px; }
 
-    .lots-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
+    .lots-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
 
-    .section-title {
-      font-size: 10px;
-      font-weight: 700;
-      color: #8b949e;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-    }
+    .section-title { font-size: 10px; font-weight: 700; color: #8b949e; letter-spacing: 1.2px; text-transform: uppercase; }
 
-    .lots-counter {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: #f0ba32;
-      background: rgba(240, 186, 50, .1);
-      border: 1px solid rgba(240, 186, 50, .2);
-      padding: 1px 7px;
-      border-radius: 10px;
-    }
+    .filtro { all: unset; font-size: 11px; color: #8b949e; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+    .filtro.on { color: #f0ba32; background: rgba(240, 186, 50, .1); }
 
-    .lots-empty {
-      font-size: 11px;
-      color: #6e7681;
-      text-align: center;
-      padding: 20px 0;
-    }
+    .lots-empty { font-size: 12px; color: #8b949e; text-align: center; padding: 22px 8px; line-height: 1.6; }
 
     .lots-list {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      max-height: 260px;
+      gap: 5px;
+      max-height: 330px;
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: #21262d transparent;
     }
 
     .lot-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      justify-content: space-between;
       gap: 8px;
-      padding: 8px 10px;
+      padding: 8px 9px;
       background: #161b22;
       border: 1px solid #21262d;
       border-radius: 7px;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
     }
 
-    .lot-item:hover {
-      border-color: rgba(240, 186, 50, .3);
-      background: rgba(240, 186, 50, .04);
-    }
+    .lot-item:hover { border-color: rgba(240, 186, 50, .3); }
 
-    .lot-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .lot-modelo {
-      font-size: 12px;
-      font-weight: 600;
-      color: #e6edf3;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
-    }
-
-    .lot-meta {
-      font-size: 10px;
-      color: #6e7681;
-    }
-
-    .lot-open {
-      all: unset;
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
+    .lot-score {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 5px;
-      font-size: 14px;
-      color: #f0ba32;
-      cursor: pointer;
-      transition: background .15s;
-    }
-
-    .lot-open:hover {
-      background: rgba(240, 186, 50, .15);
-    }
-
-    .lot-delete {
-      all: unset;
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 5px;
-      font-size: 14px;
-      color: #8b949e;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-    }
-
-    .lot-delete:hover {
-      background: rgba(239, 68, 68, .15);
-      color: #ef4444;
-    }
-
-    /* ── CONFIGS ── */
-    .config-wrap {
-      padding: 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .field label {
-      font-size: 11px;
-      color: #8b949e;
-      font-weight: 500;
-    }
-
-    .field input {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 7px;
-      padding: 8px 10px;
-      color: #e6edf3;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 600;
-      outline: none;
-      width: 100%;
-      transition: border-color .15s;
-    }
-
-    .field input:focus {
-      border-color: #f0ba32;
-      box-shadow: 0 0 0 2px rgba(240, 186, 50, .1);
-    }
-
-    .field .hint {
-      font-size: 10px;
-      color: #6e7681;
-    }
-
-    .divider {
-      height: 1px;
-      background: #21262d;
-    }
-
-    .btn-save {
-      width: 100%;
-      padding: 11px;
-      background: #f0ba32;
-      border: none;
-      border-radius: 8px;
-      color: #0d1117;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
+      color: #0d1117;
+      background: #30363d;
+    }
+
+    .lot-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; cursor: pointer; }
+
+    .lot-modelo { font-size: 12px; font-weight: 600; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .lot-meta { font-size: 10px; color: #8b949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lot-meta b { font-family: 'JetBrains Mono', monospace; color: #c9d1d9; font-weight: 600; }
+
+    .lot-acoes { display: flex; gap: 2px; }
+
+    .ibtn {
+      all: unset;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      font-size: 13px;
+      color: #8b949e;
       cursor: pointer;
-      transition: all .15s;
     }
 
-    .btn-save:hover {
-      background: #f5c842;
-      transform: translateY(-1px);
-    }
-
-    .success-msg {
-      display: none;
-      text-align: center;
-      font-size: 12px;
-      color: #22c55e;
-      padding: 6px;
-      background: rgba(34, 197, 94, .1);
-      border-radius: 6px;
-    }
+    .ibtn:hover { background: rgba(240, 186, 50, .12); color: #f0ba32; }
+    .ibtn.on { color: #f0ba32; }
+    .ibtn.del:hover { background: rgba(239, 68, 68, .15); color: #ef4444; }
 
     /* ── AJUDA ── */
-    .help-wrap {
-      padding: 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .help-item {
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-
-    .help-item-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: #f0ba32;
-      margin-bottom: 4px;
-    }
-
-    .help-item-desc {
-      font-size: 11px;
-      color: #8b949e;
-      line-height: 1.5;
-    }
+    .help-wrap { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .help-item { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px 12px; }
+    .help-item-title { font-size: 11px; font-weight: 700; color: #f0ba32; margin-bottom: 4px; }
+    .help-item-desc { font-size: 11px; color: #8b949e; line-height: 1.5; }
 
     .shortcut {
       display: inline-block;
@@ -333,27 +167,10 @@
       margin: 0 2px;
     }
 
-    .help-link {
-      font-size: 11px;
-      color: #f0ba32;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    a { color: #f0ba32; text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-    .help-link:hover {
-      text-decoration: underline;
-    }
-
-    /* ── FOOTER GERAL ── */
-    .footer-version {
-      text-align: center;
-      font-size: 10px;
-      color: #3d444d;
-      padding: 8px;
-      border-top: 1px solid #21262d;
-    }
+    .footer-version { text-align: center; font-size: 10px; color: #6e7681; padding: 8px; border-top: 1px solid #21262d; }
   </style>
 </head>
 
@@ -361,133 +178,67 @@
 
   <div class="header">
     <div class="header-text">
-      <h1>LEILÔMETRO <span>| PRO</span></h1>
-      <p>Painel de Análise de Oportunidade</p>
+      <h1>LEILÔMETRO</h1>
+      <p>Análise de oportunidade em leilões</p>
+    </div>
+    <div class="header-btns">
+      <button class="hbtn" id="btnComparar" title="Abrir comparador">⚖️ <b id="nComparar">0</b></button>
+      <button class="hbtn" id="btnConfig" title="Configurações" aria-label="Configurações">⚙️</button>
     </div>
   </div>
 
-  <!-- TABS -->
   <div class="tabs">
     <div class="tab active" data-tab="lotes">📌 Lotes</div>
-    <div class="tab" data-tab="config">⚙️ Config</div>
-    <div class="tab" data-tab="ajuda">❓ Ajuda</div>
+    <div class="tab" data-tab="ajuda">❓ Como usar</div>
   </div>
 
-  <!-- PAINEL: LOTES -->
   <div class="panel active" id="panel-lotes">
     <div class="lots-wrap">
       <div class="lots-header">
-        <span class="section-title">Lotes Salvos</span>
-        <span class="lots-counter" id="lotes-counter"></span>
+        <span class="section-title" id="lotes-counter">Lotes salvos</span>
+        <div>
+          <button class="filtro on" data-filtro="todos">Todos</button>
+          <button class="filtro" data-filtro="favoritos">★ Favoritos</button>
+        </div>
       </div>
-      <div class="lots-empty" id="lotes-empty">Nenhum lote salvo ainda.</div>
+      <div class="lots-empty" id="lotes-empty">
+        Nenhum lote salvo ainda.<br />
+        Abra um lote no <a href="https://leilo.com.br/" target="_blank">leilo.com.br</a> e edite qualquer campo do painel,
+        clique em ➕ Comparar ou ative o rastreio.
+      </div>
       <div class="lots-list" id="lotes-list"></div>
     </div>
   </div>
 
-  <!-- PAINEL: CONFIG -->
-  <div class="panel" id="panel-config">
-    <div class="config-wrap">
-
-      <div class="section-title">📊 Referência FIPE</div>
-      <div class="field">
-        <label>FIPE padrão (R$)</label>
-        <input type="number" id="fipeMock" placeholder="0" />
-        <span class="hint">Usado apenas se não detectado na página.</span>
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-title">💰 Margem &amp; Custos</div>
-
-      <div class="field">
-        <label>Margem de revenda desejada (%)</label>
-        <input type="number" id="margemRevenda" placeholder="15" min="0" max="60" />
-      </div>
-      <div class="field">
-        <label>Comissão do leiloeiro (%)</label>
-        <input type="number" id="comissaoLeiloeiro" placeholder="5" min="0" max="20" />
-      </div>
-      <div class="field">
-        <label>Incremento por lance (R$)</label>
-        <input type="number" id="incrementoLance" placeholder="200" />
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-title">🔧 Custos Fixos Estimados</div>
-
-      <div class="field">
-        <label>Taxa de pátio padrão (R$)</label>
-        <input type="number" id="taxaPatio" placeholder="350" />
-      </div>
-      <div class="field">
-        <label>Doc / DETRAN (R$)</label>
-        <input type="number" id="custoDocumentacao" placeholder="800" />
-      </div>
-      <div class="field">
-        <label>IPVA Estimado (R$)</label>
-        <input type="number" id="custoIPVA" placeholder="1200" />
-      </div>
-      <div class="field">
-        <label>Conserto médio (R$)</label>
-        <input type="number" id="custoConserto" placeholder="2500" />
-      </div>
-
-      <button class="btn-save" id="btnSave">✓ Salvar Configurações</button>
-      <div class="success-msg" id="successMsg">✅ Configurações salvas!</div>
-
-    </div>
-  </div>
-
-  <!-- PAINEL: AJUDA -->
   <div class="panel" id="panel-ajuda">
     <div class="help-wrap">
-
       <div class="help-item">
-        <div class="help-item-title">⌨️ Atalho de teclado</div>
-        <div class="help-item-desc">
-          Pressione <span class="shortcut">Ctrl</span>+<span class="shortcut">Shift</span>+<span
-            class="shortcut">L</span> em qualquer página de leilão para abrir ou fechar o painel.
-        </div>
+        <div class="help-item-title">⌨️ Abrir / fechar o painel</div>
+        <div class="help-item-desc">Na página de um lote, <span class="shortcut">Ctrl</span>+<span class="shortcut">Shift</span>+<span class="shortcut">L</span>.</div>
       </div>
-
       <div class="help-item">
-        <div class="help-item-title">📊 Como funciona o Score</div>
-        <div class="help-item-desc">
-          O score (0–100) compara o lance atual com o preço limite calculado pela FIPE menos sua margem. Quanto mais
-          abaixo do limite, maior o score. KM alto penaliza em até 20 pontos.
-        </div>
+        <div class="help-item-title">🎯 Preço limite</div>
+        <div class="help-item-desc">O maior lance em que você ainda lucra a margem desejada, já contando comissão, taxas do leilão e custos de conserto, documentação e IPVA.</div>
       </div>
-
       <div class="help-item">
-        <div class="help-item-title">💾 Dados por lote</div>
-        <div class="help-item-desc">
-          O Leilômetro salva FIPE, margem e anotações por lote. Ao revisitar a mesma página, seus dados são restaurados
-          automaticamente.
-        </div>
+        <div class="help-item-title">🔔 Modo Leilão</div>
+        <div class="help-item-desc">Ative o rastreio no painel durante o pregão. Ele apita quando faltarem poucos lances para o seu teto, quando passar do teto ou num valor que você escolher. Deixe a aba do lote aberta.</div>
       </div>
-
       <div class="help-item">
-        <div class="help-item-title">🔍 FIPE não detectada?</div>
-        <div class="help-item-desc">
-          Digite o valor manualmente no campo FIPE dentro do painel. Consulte em <a class="help-link"
-            href="https://veiculos.fipe.org.br" target="_blank">veiculos.fipe.org.br ↗</a>
-        </div>
+        <div class="help-item-title">📊 Score</div>
+        <div class="help-item-desc">De 0 a 100: quanto mais abaixo do preço limite está o lance, maior. KM/ano alto tira até 20 pontos. Sem FIPE não há score.</div>
       </div>
-
       <div class="help-item">
-        <div class="help-item-title">🆘 Suporte</div>
-        <div class="help-item-desc">
-          <a class="help-link" href="https://leilometro.com.br/suporte" target="_blank">leilometro.com.br/suporte ↗</a>
-        </div>
+        <div class="help-item-desc"><a href="#" id="linkBoasVindas">Guia completo ↗</a> · <a href="https://leilometro.com.br/suporte" target="_blank">Suporte ↗</a></div>
       </div>
-
     </div>
   </div>
 
-  </div>
+  <div class="footer-version">Leilômetro v<span id="versao"></span></div>
 
-  <div class="footer-version">Leilômetro v1.0.1</div>
-
+  <script src="../lib/util.js"></script>
+  <script src="../lib/calc.js"></script>
+  <script src="../lib/storage.js"></script>
   <script src="popup.js"></script>
 </body>
 

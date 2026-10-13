@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Leilômetro — Análise de Oportunidade",
-  "version": "1.0.1",
-  "description": "Análise inteligente de leilões de veículos em tempo real. Calcula o preço ideal, taxas e KM/Ano direto na tela.",
+  "version": "1.1.0",
+  "description": "Análise de leilões de veículos em tempo real: custo real, preço limite, alertas de lance, comparador e assistente de IA.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -19,6 +19,10 @@
     },
     "default_title": "Leilômetro"
   },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
   "content_scripts": [
     {
       "matches": [
@@ -26,7 +30,16 @@
         "*://*.leilo.com.br/*"
       ],
       "js": [
-        "content.js"
+        "lib/util.js",
+        "lib/calc.js",
+        "lib/api.js",
+        "lib/storage.js",
+        "lib/sound.js",
+        "content/scrape.js",
+        "content/panel.js",
+        "content/live.js",
+        "content/assistant.js",
+        "content/main.js"
       ],
       "css": [
         "styles.css"
@@ -35,10 +48,15 @@
     }
   ],
   "permissions": [
-    "storage"
+    "storage",
+    "notifications"
   ],
   "host_permissions": [
     "*://*.leilo.com.br/*"
+  ],
+  "optional_host_permissions": [
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "externally_connectable": {
     "matches": [

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leilômetro — Configurações</title>
+  <link rel="stylesheet" href="../ui/pages.css" />
+  <style>
+    .linha-chave { display: flex; gap: 8px; }
+    .linha-chave input { flex: 1; }
+    .provedores { display: flex; gap: 10px; flex-wrap: wrap; }
+    .provedores label { flex: 1; min-width: 200px; }
+    .provedor-card { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--border-2); border-radius: 8px; cursor: pointer; background: var(--surface-2); }
+    .provedor-card:has(input:checked) { border-color: var(--gold); background: rgba(240,186,50,.06); }
+    .lista-estat { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .estat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .estat b { display: block; font-family: var(--mono); font-size: 18px; color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topo">
+      <div>
+        <div class="marca">LEILÔMETRO <span>| CONFIGURAÇÕES</span></div>
+        <p class="desc" style="margin:4px 0 0">Valores padrão usados em todos os lotes. Cada lote pode ser ajustado no próprio painel.</p>
+      </div>
+      <div class="acoes">
+        <a class="btn" href="../compare/compare.html">⚖️ Comparador</a>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab ativa" data-aba="calculo" role="tab">💰 Cálculo</button>
+      <button class="tab" data-aba="alertas" role="tab">🔔 Alertas</button>
+      <button class="tab" data-aba="ia" role="tab">🤖 IA</button>
+      <button class="tab" data-aba="dados" role="tab">💾 Dados</button>
+    </nav>
+
+    <!-- CÁLCULO -->
+    <section class="aba ativa" id="aba-calculo">
+      <div class="card">
+        <div class="grid-2">
+          <div class="field">
+            <label for="margemRevenda">Margem de revenda desejada (%)</label>
+            <input type="number" id="margemRevenda" data-cfg="margemRevenda" data-tipo="pct" min="0" max="60" step="1" />
+            <span class="hint">Lucro mínimo sobre a FIPE. Define o preço limite.</span>
+          </div>
+          <div class="field">
+            <label for="comissaoLeiloeiro">Comissão do leiloeiro (%)</label>
+            <input type="number" id="comissaoLeiloeiro" data-cfg="comissaoLeiloeiro" data-tipo="pct" min="0" max="20" step="0.5" />
+            <span class="hint">Usada só se o site não informar (o leilo.com.br informa).</span>
+          </div>
+          <div class="field">
+            <label for="incrementoLance">Incremento por lance (R$)</label>
+            <input type="number" id="incrementoLance" data-cfg="incrementoLance" min="1" step="50" />
+            <span class="hint">Usado só se o site não informar.</span>
+          </div>
+          <div class="field">
+            <label for="taxaPatio">Taxas do leilão padrão (R$)</label>
+            <input type="number" id="taxaPatio" data-cfg="taxaPatio" min="0" step="50" />
+            <span class="hint">Pátio, remoção, vistoria… Usada só se o site não informar.</span>
+          </div>
+        </div>
+      </div>
+
+      <h2>Custos pós-arremate padrão</h2>
+      <div class="card">
+        <div class="grid-2">
+          <div class="field">
+            <label for="custoConserto">Conserto médio (R$)</label>
+            <input type="number" id="custoConserto" data-cfg="custoConserto" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="custoDocumentacao">Documentação / DETRAN (R$)</label>
+            <input type="number" id="custoDocumentacao" data-cfg="custoDocumentacao" min="0" step="50" />
+          </div>
+          <div class="field">
+            <label for="custoIPVA">IPVA estimado (R$)</label>
+            <input type="number" id="custoIPVA" data-cfg="custoIPVA" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="fipeMock">FIPE padrão (R$)</label>
+            <input type="number" id="fipeMock" data-cfg="fipeMock" min="0" step="100" />
+            <span class="hint">Deixe 0 para nunca supor uma FIPE quando o site não informar (recomendado).</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALERTAS -->
+    <section class="aba" id="aba-alertas">
+      <div class="card">
+        <div class="grid-2">
+          <label class="check"><input type="checkbox" id="somAtivo" data-cfg="somAtivo" data-tipo="bool" /> Tocar som nos alertas</label>
+          <label class="check"><input type="checkbox" id="notificacoes" data-cfg="notificacoes" data-tipo="bool" /> Notificação do sistema (funciona em outra aba)</label>
+          <div class="field">
+            <label for="volume">Volume do apito</label>
+            <input type="range" id="volume" data-cfg="volume" data-tipo="vol" min="5" max="100" step="5" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div class="acoes">
+              <button class="btn btn-sm" id="testarApito">🔊 Testar apito</button>
+              <button class="btn btn-sm" id="testarCritico">⛔ Testar "passou do teto"</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="intervaloPolling">Consultar a API a cada (segundos)</label>
+            <input type="number" id="intervaloPolling" data-cfg="intervaloPolling" min="2" max="30" step="1" />
+            <span class="hint">Reserva para quando a página não atualiza sozinha. 3s é um bom valor.</span>
+          </div>
+          <div class="field">
+            <label for="alertaFaltamLances">Avisar quando faltarem (lances para o teto)</label>
+            <input type="number" id="alertaFaltamLances" data-cfg="alertaFaltamLances" min="1" max="50" step="1" />
+          </div>
+        </div>
+      </div>
+      <p class="aviso" style="margin-top:14px">Durante o pregão, deixe a aba do lote aberta (pode ficar em segundo plano). O Chrome reduz a frequência de abas ocultas há muito tempo, mas os lances que o site mostra na tela continuam sendo detectados na hora.</p>
+    </section>
+
+    <!-- IA -->
+    <section class="aba" id="aba-ia">
+      <div class="card">
+        <p style="margin-top:0">Conecte sua própria chave de API para usar o assistente 🤖 no painel e no comparador: veredito do lote, riscos, teto sugerido, checklist de vistoria, comparação e parecer no relatório.</p>
+        <div class="provedores">
+          <label class="provedor-card"><input type="radio" name="provedor" value="openai" /> <span><b>OpenAI</b><br /><small class="muted">GPT</small></span></label>
+          <label class="provedor-card"><input type="radio" name="provedor" value="gemini" /> <span><b>Google Gemini</b><br /><small class="muted">AI Studio</small></span></label>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <label for="chave">Chave de API — <a id="linkChave" href="#" target="_blank" rel="noopener">onde pegar ↗</a></label>
+          <div class="linha-chave">
+            <input type="password" id="chave" autocomplete="off" spellcheck="false" placeholder="cole sua chave aqui" />
+            <button class="btn" id="mostrarChave" type="button">👁</button>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label for="modelo">Modelo</label>
+          <input type="text" id="modelo" list="listaModelos" spellcheck="false" />
+          <datalist id="listaModelos"></datalist>
+          <span class="hint" id="dicaModelo">"Testar conexão" lista os modelos disponíveis na sua conta.</span>
+        </div>
+
+        <label class="check" style="margin-top:12px"><input type="checkbox" id="incluirNotas" /> Enviar minhas anotações do lote junto com as perguntas</label>
+
+        <div class="acoes" style="margin-top:16px">
+          <button class="btn btn-primary" id="salvarIa">Salvar e autorizar</button>
+          <button class="btn" id="testarIa">Testar conexão</button>
+          <button class="btn btn-danger" id="apagarIa">Apagar chave</button>
+        </div>
+        <div class="msg" id="msgIa"></div>
+      </div>
+      <p class="muted" style="font-size:12px; margin-top:14px">
+        🔒 A chave fica só neste navegador (não sincroniza com a conta Google) e é usada apenas pelo service worker da extensão, nunca pela página do leiloeiro.
+        As consultas são cobradas na sua conta do provedor. Enviamos só os dados do lote (veículo, valores, sua análise), sem dados pessoais.
+      </p>
+    </section>
+
+    <!-- DADOS -->
+    <section class="aba" id="aba-dados">
+      <div class="lista-estat" id="estat"></div>
+      <h2>Backup</h2>
+      <div class="card">
+        <p style="margin-top:0">Seus lotes, anotações e alertas ficam só neste navegador. Exporte um backup para levar a outro computador. A chave de IA não entra no backup.</p>
+        <div class="acoes">
+          <button class="btn" id="exportar">⬇️ Exportar backup (.json)</button>
+          <label class="btn" for="importar">⬆️ Importar backup</label>
+          <input type="file" id="importar" accept="application/json,.json" hidden />
+        </div>
+        <div class="msg" id="msgDados"></div>
+      </div>
+      <h2>Zona de perigo</h2>
+      <div class="card">
+        <div class="acoes">
+          <button class="btn btn-danger" id="apagarTudo">🗑️ Apagar todos os lotes salvos</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="msg" id="msgSalvo"></div>
+    <p class="rodape">Leilômetro v<span id="versao"></span> · <a href="../welcome/welcome.html">Como usar</a></p>
+  </div>
+
+  <script src="../lib/util.js"></script>
+  <script src="../lib/calc.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/sound.js"></script>
+  <script src="../lib/ai.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,34 +1,76 @@
 # Leilômetro — Extensão Chrome
 
-O **Leilômetro** é uma ferramenta de inteligência para arrematantes de leilões de veículos. Ela injeta um painel de análise diretamente na tela do leiloeiro, ajudando você a tomar decisões baseadas em dados, não em emoção.
+O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. Ela abre um painel na página do lote no [leilo.com.br](https://leilo.com.br) e ajuda a decidir o lance pelos números, não pela emoção.
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades
 
-- **Cálculo de Custo Real:** Soma automaticamente o lance atual com comissão do leiloeiro, taxa de pátio e outros encargos.
-- **Score de Oportunidade:** Uma métrica exclusiva (0-100) que avalia se o negócio é seguro com base na margem de lucro e estado do veículo.
-- **Análise de KM/Ano:** Classifica o uso do veículo (Particular, Frota, Aplicativo ou Extremo).
-- **Preço Limite (FIPE):** Define o valor máximo que você pode pagar para manter sua margem de lucro desejada.
-- **Persistência de Dados:** Salva suas anotações e cálculos por lote localmente no seu navegador.
+- **Custo no leilão:** lance + comissão + taxas do lote (lidas da API do site; bate com o "total a pagar").
+- **Preço limite:** o maior lance em que você ainda lucra a margem desejada, já descontando comissão, taxas e custos pós-arremate (conserto, documentação, IPVA).
+- **Meu teto:** um limite pessoal opcional, usado pelos alertas.
+- **Score de oportunidade (0–100)** e **análise de KM/ano** (particular, frota, aplicativo).
+- **Modo Leilão:** botão "Ativar rastreio" durante o pregão. Apita quando faltam N lances para o teto, quando passa do teto (som crítico), quando o lance chega num valor escolhido e 1 minuto antes do encerramento previsto. Também envia notificação do sistema, muda o título da aba e mostra gráfico e ritmo dos lances.
+- **Modo compacto:** uma barra com lance, teto, lances restantes e score, colorida pela situação.
+- **Comparador:** até vários veículos lado a lado, com o melhor/pior de cada item destacado, edição de FIPE/teto/conserto na tabela e exportação para CSV.
+- **Relatório:** página para imprimir/salvar em PDF ou copiar um resumo para o WhatsApp.
+- **Assistente de IA (opcional, chave própria da OpenAI ou do Gemini):** veredito, riscos, teto sugerido, checklist de vistoria, comparação com os lotes salvos, ranking no comparador e parecer no relatório.
+- **Dados locais:** lotes, anotações e alertas ficam no navegador (`chrome.storage.local`), com backup/importação em JSON.
 
-## 🛠️ Como Instalar (Modo Desenvolvedor)
+## 🛠️ Como instalar (modo desenvolvedor)
 
-Como esta versão está no GitHub para desenvolvimento, você pode instalá-la manualmente no Chrome:
+1. Baixe ou clone este repositório.
+2. Abra `chrome://extensions/` e ative o **Modo do desenvolvedor**.
+3. Clique em **Carregar sem compactação** e selecione a pasta do repositório.
+4. Se a versão da Chrome Web Store estiver instalada, desative-a para não haver dois painéis.
+5. Abra um lote, por exemplo `https://leilo.com.br/lote/<id>/`.
 
-1.  Faça o download ou clone este repositório.
-2.  Abra o Google Chrome e acesse `chrome://extensions/`.
-3.  No canto superior direito, ative a chave **"Modo do desenvolvedor"**.
-4.  Clique no botão **"Carregar sem compactação"**.
-5.  Selecione a pasta onde os arquivos deste repositório estão salvos.
-6.  O ícone do Leilômetro aparecerá na sua barra de extensões!
+Atalho: `Ctrl+Shift+L` abre/fecha o painel.
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura
 
-- `manifest.json`: Configurações principais da extensão (Manifest V3).
-- `background.js`: Service worker para processos em segundo plano.
-- `content.js`: Script principal que injeta o painel e lê os dados dos leiloeiros.
-- `styles.css`: Estilização do painel flutuante.
-- `popup/`: Interface que aparece ao clicar no ícone da extensão.
-- `icons/`: Logotipos em diferentes resoluções.
+| Caminho | O que é |
+|---|---|
+| `manifest.json` | Manifest V3 |
+| `background.js` | Service worker: abre páginas, badge, notificações e chamadas de IA |
+| `lib/util.js` | Formatação, escape de HTML, mini-markdown |
+| `lib/calc.js` | Regras de cálculo (sem DOM), usadas em todo lugar e nos testes |
+| `lib/api.js` | Leitura da API pública do leilo.com.br (`/v1/lote/by-id/<uuid>`) |
+| `lib/storage.js` | Armazenamento (`lot:<id>`, configuração, estado do painel, IA) e migração da v1.0 |
+| `lib/sound.js` | Sons de alerta via Web Audio |
+| `lib/ai.js` | Prompts e adaptadores OpenAI/Gemini (só roda no service worker) |
+| `content/` | Painel na página: `scrape.js` (rota/DOM), `panel.js`, `live.js` (Modo Leilão), `assistant.js` (balão 🤖), `main.js` (inicialização) |
+| `popup/` | Lista de lotes salvos |
+| `options/` | Configurações: cálculo, alertas, IA, backup |
+| `compare/` | Comparador |
+| `report/` | Relatório imprimível |
+| `welcome/` | Boas-vindas (abre ao instalar) |
+| `styles.css` | Estilo do painel injetado |
+| `ui/pages.css` | Estilo das páginas da extensão |
+| `tests/` | Testes (`node --test "tests/*.test.js"`) |
+| `docs/amostra-api-lote.json` | Resposta real da API, usada nos testes |
+
+Quando o site mudar o layout, veja `DIAGNOSTICO_LEILO.md` (seletores) e `content/scrape.js`.
+
+## 🧪 Testes
+
+```bash
+node --test "tests/*.test.js"
+```
+
+Para simular lances no Modo Leilão sem um pregão real, rode no console da página do lote com o rastreio ligado:
+
+```js
+localStorage.setItem("lm_debug", "1")
+document.dispatchEvent(new CustomEvent("leilometro:simular", { detail: 40000 }))
+```
+
+## 📦 Empacotar para a Chrome Web Store
+
+```powershell
+$files = Get-ChildItem -Exclude .git,docs,tests,*.md,*.zip
+Compress-Archive -Path $files -DestinationPath leilometro-1.1.0.zip -Force
+```
+
+Permissões: `storage` (dados locais), `notifications` (alertas do Modo Leilão), host `*.leilo.com.br` (ler o lote aberto) e, só se o usuário ativar a IA, `api.openai.com` ou `generativelanguage.googleapis.com` (permissões opcionais).
 
 ## 📄 Licença
 
