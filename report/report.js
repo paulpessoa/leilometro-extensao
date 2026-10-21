@@ -191,7 +191,8 @@
     if (estado.lotes.length === 1 && !estado.lotes[0].ai?.relatorio) {
       try {
         const st = await chrome.runtime.sendMessage({ type: "ai.status" })
-        btn.hidden = !st?.configurado
+        btn.hidden = !(st?.configurado || st?.externo)
+        btn.textContent = st?.externo ? `🤖 Pedir parecer ao ${st.destinoNome}` : "🤖 Gerar parecer da IA"
       } catch {}
     }
   }
@@ -218,6 +219,14 @@
       historico: lot.live?.historico || [],
       incluirNotas: st?.incluirNotas !== false
     })
+    if (st?.externo) {
+      const pergunta = LM.prompt.promptExterno("relatorio", contexto)
+      const copiou = await LM.prompt.copiar(pergunta)
+      chrome.tabs.create({ url: LM.prompt.urlDestino(st.destino, pergunta) })
+      btn.disabled = false
+      mostrar(copiou ? `✓ Pergunta copiada e ${st.destinoNome} aberto. Se o texto não aparecer lá, cole com Ctrl+V.` : "Não consegui copiar a pergunta. Tente de novo.")
+      return
+    }
     const r = await chrome.runtime.sendMessage({ type: "ai.ask", tarefa: "relatorio", contexto })
     btn.disabled = false
     if (!r?.ok) {

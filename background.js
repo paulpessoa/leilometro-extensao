@@ -3,7 +3,7 @@
  * Abre páginas da extensão, badge do ícone, notificações do Modo Leilão,
  * lembretes dos lotes marcados (★) e chamadas de IA (a chave do usuário só é lida aqui).
  */
-importScripts("lib/util.js", "lib/calc.js", "lib/api.js", "lib/storage.js", "lib/ai.js")
+importScripts("lib/util.js", "lib/calc.js", "lib/api.js", "lib/storage.js", "lib/prompt.js", "lib/ai.js")
 
 const LM = globalThis.LM
 
@@ -43,6 +43,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     case "notify":
       notificar(`lm|${tabId ?? ""}|${Date.now()}`, msg.title, msg.message)
+      return false
+
+    // Modo sem chave: abre o chat de IA escolhido (só os endereços de LM.prompt.DESTINOS)
+    case "openUrl":
+      if (LM.prompt.destinoPermitido(msg.url)) chrome.tabs.create({ url: msg.url })
       return false
 
     case "ai.status":

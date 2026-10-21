@@ -126,7 +126,32 @@
     <!-- IA -->
     <section class="aba" id="aba-ia">
       <div class="card">
-        <p style="margin-top:0">Conecte sua própria chave de API para usar o assistente 🤖 no painel e no comparador: veredito do lote, riscos, teto sugerido, checklist de vistoria, comparação e parecer no relatório.</p>
+        <p style="margin-top:0">O assistente 🤖 dá veredito do lote, riscos, teto sugerido, checklist de vistoria, comparação e parecer no relatório. Escolha como usar:</p>
+        <div class="provedores" id="modos">
+          <label class="provedor-card"><input type="radio" name="modo" value="externo" /> <span><b>Sem chave</b> (recomendado)<br /><small class="muted">Copia a pergunta e abre o ChatGPT, Gemini ou Claude. Você só cola.</small></span></label>
+          <label class="provedor-card"><!-- Remova "disabled" quando a leilometro-api publicar o POST /ia/analisar -->
+          <input type="radio" name="modo" value="leilometro" disabled /> <span><b>IA do Leilômetro</b> (em breve)<br /><small class="muted">Resposta dentro do painel, com cota grátis por dia.</small></span></label>
+          <label class="provedor-card"><input type="radio" name="modo" value="chave" /> <span><b>Chave própria</b> (avançado)<br /><small class="muted">OpenAI ou Gemini, cobrado na sua conta.</small></span></label>
+        </div>
+
+        <div id="modo-externo" class="field" style="margin-top:16px">
+          <label for="destino">Abrir qual chat de IA?</label>
+          <select id="destino">
+            <option value="chatgpt">ChatGPT</option>
+            <option value="gemini">Gemini</option>
+            <option value="claude">Claude</option>
+          </select>
+          <span class="hint">Nada é enviado pela extensão: ela só copia o texto e abre a aba. Você precisa estar logado no chat escolhido (a conta grátis serve).</span>
+        </div>
+
+        <div id="modo-leilometro" style="margin-top:16px" hidden>
+          <p class="hint" style="margin:0 0 10px">As perguntas vão para o servidor do Leilômetro, que consulta a IA por você. Enviamos só os dados do lote e um código anônimo desta instalação para contar a cota diária.</p>
+          <button class="btn btn-primary" id="autorizarServidor" type="button">Autorizar IA do Leilômetro</button>
+          <div class="msg" id="msgServidor"></div>
+        </div>
+
+        <div id="modo-chave" hidden>
+        <p style="margin-top:16px">Conecte sua própria chave de API:</p>
         <div class="provedores">
           <label class="provedor-card"><input type="radio" name="provedor" value="openai" /> <span><b>OpenAI</b><br /><small class="muted">GPT</small></span></label>
           <label class="provedor-card"><input type="radio" name="provedor" value="gemini" /> <span><b>Google Gemini</b><br /><small class="muted">AI Studio</small></span></label>
@@ -155,9 +180,10 @@
           <button class="btn btn-danger" id="apagarIa">Apagar chave</button>
         </div>
         <div class="msg" id="msgIa"></div>
+        </div>
       </div>
       <p class="muted" style="font-size:12px; margin-top:14px">
-        🔒 A chave fica só neste navegador (não sincroniza com a conta Google) e é usada apenas pelo service worker da extensão, nunca pela página do leiloeiro.
+        🔒 Se usar chave própria, ela fica só neste navegador (não sincroniza com a conta Google) e é usada apenas pelo service worker da extensão, nunca pela página do leiloeiro.
         As consultas são cobradas na sua conta do provedor. Enviamos só os dados do lote (veículo, valores, sua análise), sem dados pessoais.
       </p>
     </section>
@@ -191,6 +217,7 @@
   <script src="../lib/calc.js"></script>
   <script src="../lib/storage.js"></script>
   <script src="../lib/sound.js"></script>
+  <script src="../lib/prompt.js"></script>
   <script src="../lib/ai.js"></script>
   <script src="options.js"></script>
 </body>

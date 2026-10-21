@@ -35,6 +35,7 @@
         "lib/api.js",
         "lib/storage.js",
         "lib/sound.js",
+        "lib/prompt.js",
         "content/scrape.js",
         "content/panel.js",
         "content/live.js",
@@ -57,7 +58,8 @@
   ],
   "optional_host_permissions": [
     "https://api.openai.com/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "https://leilometro-api.onrender.com/*"
   ],
   "externally_connectable": {
     "matches": [

@@ -74,8 +74,36 @@
       ${lista("Perguntar/checar na vistoria", j.perguntasVistoria)}`
   }
 
+  function htmlExterno() {
+    const s = st.status || {}
+    const opcoes = Object.entries(LM.prompt.DESTINOS)
+      .map(([id, d]) => `<option value="${id}" ${id === s.destino ? "selected" : ""}>${esc(d.nome)}</option>`)
+      .join("")
+    const msgs = conversa()
+    return `
+      <div class="li-ai-drawer" role="dialog" aria-label="Assistente de IA">
+        <div class="li-ai-head">
+          <b>🤖 Assistente</b><small>sem chave · abre o</small>
+          <select id="lm-ai-destino" aria-label="Chat de IA">${opcoes}</select>
+          <button type="button" class="li-x" data-ai-acao="fechar" aria-label="Fechar">×</button>
+        </div>
+        <div class="li-ai-msgs">
+          ${msgs.length ? msgs.map(htmlMensagem).join("") : '<div class="li-ai-msg li-ai-bot">Escolha uma pergunta. Eu copio os números deste lote e abro o chat de IA em outra aba. Lá, é só colar (Ctrl+V) se o texto não aparecer sozinho.</div>'}
+        </div>
+        <div class="li-ai-chips">
+          ${CHIPS.filter(([t]) => t !== "relatorio").map(([t, r]) => `<button type="button" class="li-ai-chip" data-ai-acao="externo" data-tarefa="${t}">${r}</button>`).join("")}
+        </div>
+        <form class="li-ai-form">
+          <textarea id="lm-ai-input" rows="2" placeholder="Pergunte sobre este lote..."></textarea>
+          <button type="submit" aria-label="Enviar">➤</button>
+        </form>
+        <p class="li-hint" style="margin:6px 10px">Quer a resposta aqui no painel? <button type="button" class="li-link-btn" data-ai-acao="config">Ativar IA do Leilômetro ou chave própria</button></p>
+      </div>`
+  }
+
   function htmlDrawer() {
     const s = st.status
+    if (s?.externo) return htmlExterno()
     if (!s?.configurado) {
       return `
         <div class="li-ai-drawer" role="dialog" aria-label="Assistente de IA">
@@ -124,7 +152,8 @@
       e.preventDefault()
       const input = root.querySelector("#lm-ai-input")
       const texto = input?.value?.trim()
-      if (texto) perguntar("livre", texto)
+      if (texto && st.status?.externo) perguntarExterno("livre", texto)
+      else if (texto) perguntar("livre", texto)
     })
     root.querySelector("#lm-ai-input")?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -160,6 +189,8 @@
       } else if (acao === "limpar") {
         st.conversas[painel().loteId] = []
         renderizar()
+      } else if (acao === "externo") {
+        perguntarExterno(btn.getAttribute("data-tarefa"))
       } else if (acao === "tarefa") {
         perguntar(btn.getAttribute("data-tarefa"))
       } else if (acao === "refazer") {
@@ -175,8 +206,33 @@
         }
       }
     })
+    panelEl.addEventListener("change", async (e) => {
+      if (e.target?.id !== "lm-ai-destino") return
+      await LM.storage.setAi({ destino: e.target.value })
+      if (st.status) st.status.destino = e.target.value
+    })
     renderizar()
     if (!st.status) atualizarStatus().then(renderizar)
+  }
+
+  // ─── MODO SEM CHAVE ────────────────────────────────────────────────────────
+  async function perguntarExterno(tarefa, texto = "") {
+    const destino = st.status?.destino || "chatgpt"
+    const nome = LM.prompt.DESTINOS[destino]?.nome || "chat de IA"
+    const pergunta = LM.prompt.promptExterno(tarefa, await montarContexto(tarefa), texto)
+    // Copia antes de qualquer outra espera: o navegador exige o gesto do usuário
+    const copiou = await LM.prompt.copiar(pergunta)
+    LM.util.enviar({ type: "openUrl", url: LM.prompt.urlDestino(destino, pergunta) })
+    const msgs = conversa()
+    msgs.push({ role: "user", content: tarefa === "livre" ? texto : ROTULO[tarefa] })
+    msgs.push({
+      role: "assistant",
+      content: copiou
+        ? `✓ Pergunta copiada e ${nome} aberto em outra aba. Se o texto não aparecer lá, cole com **Ctrl+V** e envie.`
+        : `Abri o ${nome}, mas não consegui copiar a pergunta. Tente de novo ou use a IA do Leilômetro.`,
+      modelo: "sem chave"
+    })
+    renderizar()
   }
 
   // ─── PERGUNTAR ─────────────────────────────────────────────────────────────
