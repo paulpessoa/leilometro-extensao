@@ -1,6 +1,34 @@
 # Leilômetro — Extensão Chrome
 
-O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. Ela abre um painel na página do lote no [leilo.com.br](https://leilo.com.br) e ajuda a decidir o lance pelos números, não pela emoção.
+> Análise de leilões de veículos em tempo real: custo total, preço limite de lance e KM/ano direto na página do lote.
+
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-instalar-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/oifmcimfbbbjenddghinhddmmihfolpi/)
+[![Site](https://img.shields.io/badge/site-leilometro.com.br-0a7?logo=googlechrome&logoColor=white)](https://leilometro.com.br)
+[![Tests](https://github.com/paulpessoa/leilometro-extensao/actions/workflows/ci.yml/badge.svg)](https://github.com/paulpessoa/leilometro-extensao/actions/workflows/ci.yml)
+![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
+
+O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. Ela abre um painel na página do lote no [leilo.com.br](https://leilo.com.br) e ajuda a decidir o lance pelos números, não pela emoção. JavaScript puro (sem build), com cálculo isolado em `lib/calc.js` e coberto por testes.
+
+## ⚙️ Como funciona
+
+- **Content scripts** (`content/`): rodam em `leilo.com.br`, identificam o lote aberto, buscam os dados na API pública do site (`lib/api.js`) e desenham o painel injetado, o Modo Leilão e o balão do assistente.
+- **Service worker** (`background.js`): badge, notificações, alarmes de lembrete e as chamadas de IA (`lib/ai.js`), que só rodam aqui.
+- **Armazenamento**: `chrome.storage.local` para lotes, anotações e alertas; `chrome.storage.sync` para a configuração, com backup/importação em JSON. Não há servidor próprio.
+- **Regras de cálculo** (`lib/calc.js`): funções puras, sem DOM, reaproveitadas pelo painel, comparador, relatório e testes.
+- **Integração com o site**: `leilometro.com.br` pode perguntar à extensão se ela está instalada (mensagem `leilometro_ping`, que devolve apenas a versão).
+
+## 🔒 Permissões e privacidade
+
+| Permissão | Para que serve |
+|---|---|
+| `storage` | Guardar lotes, anotações e configurações no navegador |
+| `notifications` | Avisos do Modo Leilão e lembretes de encerramento |
+| `alarms` | Disparar o lembrete X minutos antes do encerramento, mesmo com a aba fechada |
+| Host `*.leilo.com.br` | Ler o lote aberto e consultar a API do site |
+| Opcionais: `api.openai.com`, `generativelanguage.googleapis.com` | Só pedidas se você ativar o assistente de IA, com a sua própria chave |
+| `externally_connectable` (`www.leilometro.com.br`) | Permite ao site detectar se a extensão está instalada |
+
+Lotes e anotações ficam no navegador. Nenhum dado é enviado a servidores do Leilômetro; a única saída é para o provedor de IA que você escolher, e só quando você usa o assistente. Detalhes e justificativas da loja em [docs/CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md).
 
 ## 🚀 Funcionalidades
 
@@ -74,7 +102,6 @@ node scripts/empacotar.mjs   # gera dist/leilometro-<versão>.zip
 
 Textos da ficha da loja, justificativas de permissão e formulário de privacidade: [docs/CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md).
 
-Permissões: `storage` (dados locais), `notifications` (alertas do Modo Leilão), `alarms` (lembrete antes do encerramento), host `*.leilo.com.br` (ler o lote aberto) e, só se o usuário ativar a IA, `api.openai.com` ou `generativelanguage.googleapis.com` (permissões opcionais).
 
 ## 📄 Licença
 
