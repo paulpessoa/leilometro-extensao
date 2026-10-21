@@ -239,11 +239,29 @@
 
   $("#ia").addEventListener("click", async () => {
     const status = await chrome.runtime.sendMessage({ type: "ai.status" })
-    if (!status?.configurado) {
-      mostrar('Configure sua chave de IA primeiro: <a href="../options/options.html#ia">Configurações › IA</a>', "erro")
+    const btn = $("#ia")
+    if (status?.externo) {
+      // Sem chave: copia a pergunta e abre o chat de IA escolhido
+      const lotes = estado.colunas.map(({ lot }) => ({
+        id: lot.id,
+        ...LM.calc.resumoIa(lot.snapshot || {}, lot.user || {}, estado.config),
+        anotacoes: status.incluirNotas ? lot.user?.notas || undefined : undefined
+      }))
+      const pergunta = LM.prompt.promptExterno("ranking", { lotes })
+      const copiou = await LM.prompt.copiar(pergunta)
+      chrome.tabs.create({ url: LM.prompt.urlDestino(status.destino, pergunta) })
+      mostrar(
+        copiou
+          ? `✓ Pergunta copiada e ${esc(status.destinoNome)} aberto em outra aba. Se o texto não aparecer lá, cole com Ctrl+V.`
+          : `Abri o ${esc(status.destinoNome)}, mas não consegui copiar a pergunta. Tente de novo.`,
+        copiou ? "ok" : "erro"
+      )
       return
     }
-    const btn = $("#ia")
+    if (!status?.configurado) {
+      mostrar('Configure a IA primeiro: <a href="../options/options.html#ia">Configurações › IA</a>', "erro")
+      return
+    }
     btn.disabled = true
     mostrar(`🤖 Analisando ${estado.colunas.length} lotes com ${esc(status.provedorNome)}…`)
     const lotes = estado.colunas.map(({ lot }) => ({

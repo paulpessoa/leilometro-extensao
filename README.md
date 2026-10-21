@@ -25,7 +25,7 @@ O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. 
 | `notifications` | Avisos do Modo Leilão e lembretes de encerramento |
 | `alarms` | Disparar o lembrete X minutos antes do encerramento, mesmo com a aba fechada |
 | Host `*.leilo.com.br` | Ler o lote aberto e consultar a API do site |
-| Opcionais: `api.openai.com`, `generativelanguage.googleapis.com` | Só pedidas se você ativar o assistente de IA, com a sua própria chave |
+| Opcionais: `api.openai.com`, `generativelanguage.googleapis.com`, `leilometro-api.onrender.com` | Só pedidas se você ativar a IA com chave própria ou a IA do Leilômetro. O modo sem chave não pede nada |
 | `externally_connectable` (`www.leilometro.com.br`) | Permite ao site detectar se a extensão está instalada |
 
 Lotes e anotações ficam no navegador. Nenhum dado é enviado a servidores do Leilômetro; a única saída é para o provedor de IA que você escolher, e só quando você usa o assistente. Detalhes e justificativas da loja em [docs/CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md).
@@ -42,7 +42,10 @@ Lotes e anotações ficam no navegador. Nenhum dado é enviado a servidores do L
 - **Modo compacto:** uma barra com lance, teto, lances restantes e score, colorida pela situação.
 - **Comparador:** até vários veículos lado a lado, com o melhor/pior de cada item destacado, edição de FIPE/teto/conserto na tabela e exportação para CSV.
 - **Relatório:** página para imprimir/salvar em PDF ou copiar um resumo para o WhatsApp.
-- **Assistente de IA (opcional, chave própria da OpenAI ou do Gemini):** veredito, riscos, teto sugerido, checklist de vistoria, comparação com os lotes salvos, ranking no comparador e parecer no relatório.
+- **Assistente de IA, em três modos** (Configurações › IA): veredito, riscos, teto sugerido, checklist de vistoria, comparação com os lotes salvos, ranking no comparador e parecer no relatório.
+  - **Sem chave (padrão):** a extensão copia uma pergunta com os dados do lote e abre o ChatGPT, o Gemini ou o Claude. Basta colar (Ctrl+V). Não envia nada por conta própria.
+  - **IA do Leilômetro (em breve):** resposta dentro do painel, com cota grátis diária, via `leilometro-api`. Permissão opcional.
+  - **Chave própria (avançado):** OpenAI ou Gemini, cobrado na sua conta.
 - **Dados locais:** lotes, anotações e alertas ficam no navegador (`chrome.storage.local`), com backup/importação em JSON.
 
 ## 🛠️ Como instalar (modo desenvolvedor)
@@ -66,7 +69,8 @@ Atalho: `Ctrl+Shift+L` abre/fecha o painel.
 | `lib/api.js` | Leitura da API pública do leilo.com.br (`/v1/lote/by-id/<uuid>`) |
 | `lib/storage.js` | Armazenamento (`lot:<id>`, configuração, estado do painel, IA) e migração da v1.0 |
 | `lib/sound.js` | Sons de alerta via Web Audio |
-| `lib/ai.js` | Prompts e adaptadores OpenAI/Gemini (só roda no service worker) |
+| `lib/prompt.js` | Prompts compartilhados e modo "sem chave" (monta a pergunta, copia e escolhe o chat) |
+| `lib/ai.js` | Modos de IA e adaptadores OpenAI/Gemini/servidor (só roda no service worker) |
 | `content/` | Painel na página: `scrape.js` (rota/DOM), `panel.js`, `live.js` (Modo Leilão), `assistant.js` (balão 🤖), `main.js` (inicialização) |
 | `popup/` | Lista de lotes salvos |
 | `options/` | Configurações: cálculo, alertas, IA, backup |

@@ -216,31 +216,12 @@
   }
 
   // ─── MODO SEM CHAVE ────────────────────────────────────────────────────────
-  async function copiar(texto) {
-    try {
-      await navigator.clipboard.writeText(texto)
-      return true
-    } catch {}
-    // Fallback para páginas que bloqueiam a Clipboard API
-    const ta = document.createElement("textarea")
-    ta.value = texto
-    ta.style.cssText = "position:fixed;opacity:0;top:0;left:0"
-    document.body.appendChild(ta)
-    ta.select()
-    let ok = false
-    try {
-      ok = document.execCommand("copy")
-    } catch {}
-    ta.remove()
-    return ok
-  }
-
   async function perguntarExterno(tarefa, texto = "") {
     const destino = st.status?.destino || "chatgpt"
     const nome = LM.prompt.DESTINOS[destino]?.nome || "chat de IA"
     const pergunta = LM.prompt.promptExterno(tarefa, await montarContexto(tarefa), texto)
     // Copia antes de qualquer outra espera: o navegador exige o gesto do usuário
-    const copiou = await copiar(pergunta)
+    const copiou = await LM.prompt.copiar(pergunta)
     LM.util.enviar({ type: "openUrl", url: LM.prompt.urlDestino(destino, pergunta) })
     const msgs = conversa()
     msgs.push({ role: "user", content: tarefa === "livre" ? texto : ROTULO[tarefa] })

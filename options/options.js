@@ -125,6 +125,7 @@
       ok = await pedido
     } catch {}
     await LM.storage.setAi({
+      modo: "chave",
       provedor: provedorSelecionado(),
       chave,
       modelo: $("#modelo").value.trim(),
@@ -169,7 +170,10 @@
 
   $("#apagarIa").addEventListener("click", async () => {
     if (!confirm("Apagar a chave de IA deste navegador?")) return
-    await LM.storage.setAi({ chave: "" })
+    await LM.storage.setAi({ chave: "", modo: "externo" })
+    const radioExterno = document.querySelector('input[name="modo"][value="externo"]')
+    if (radioExterno) radioExterno.checked = true
+    atualizarModoUi()
     $("#chave").value = ""
     try {
       await chrome.permissions.remove({ origins: Object.values(PROV).map((p) => p.origem) })
@@ -177,6 +181,48 @@
     mostrar($("#msgIa"), "Chave apagada.", "ok")
   })
 
+  // ─── MODO DA IA ────────────────────────────────────────────────────────────
+  const modoSelecionado = () => document.querySelector('input[name="modo"]:checked')?.value || "externo"
+
+  function atualizarModoUi() {
+    const m = modoSelecionado()
+    $("#modo-externo").hidden = m !== "externo"
+    $("#modo-leilometro").hidden = m !== "leilometro"
+    $("#modo-chave").hidden = m !== "chave"
+  }
+
+  async function carregarModo() {
+    const ai = await LM.storage.getAi()
+    const modo = ai.modo || (ai.chave ? "chave" : "externo")
+    const radio = document.querySelector(`input[name="modo"][value="${modo}"]`)
+    if (radio) radio.checked = true
+    $("#destino").value = LM.prompt.DESTINOS[ai.destino] ? ai.destino : "chatgpt"
+    atualizarModoUi()
+    if (modo === "leilometro" && !(await chrome.permissions.contains({ origins: [LM.ai.SERVIDOR.origem] }))) {
+      mostrar($("#msgServidor"), "Falta autorizar o acesso. Clique no botão acima.", "erro")
+    }
+  }
+
+  $$('input[name="modo"]').forEach((r) =>
+    r.addEventListener("change", async () => {
+      atualizarModoUi()
+      await LM.storage.setAi({ modo: modoSelecionado() })
+    })
+  )
+  $("#destino").addEventListener("change", (e) => LM.storage.setAi({ destino: e.target.value }))
+
+  // chrome.permissions.request precisa ser a primeira coisa no clique (gesto do usuário)
+  $("#autorizarServidor").addEventListener("click", async () => {
+    let ok = false
+    try {
+      ok = await chrome.permissions.request({ origins: [LM.ai.SERVIDOR.origem] })
+    } catch {}
+    if (ok) await LM.storage.setAi({ modo: "leilometro" })
+    mostrar($("#msgServidor"), ok ? "✓ IA do Leilômetro autorizada." : "Acesso não autorizado. Sem ele esse modo não funciona.", ok ? "ok" : "erro")
+  })
+
+  // Salvar a chave passa a ativar o modo "chave"; apagar volta para o modo sem chave
+  carregarModo()
   carregarIa()
 
   // ─── DADOS ─────────────────────────────────────────────────────────────────
