@@ -9,6 +9,14 @@
 
 O **Leilômetro** é uma ferramenta para arrematantes de leilões de veículos. Ela abre um painel na página do lote no [leilo.com.br](https://leilo.com.br) e ajuda a decidir o lance pelos números, não pela emoção. JavaScript puro (sem build), com cálculo isolado em `lib/calc.js` e coberto por testes.
 
+<p align="center">
+  <img src="docs/media/demo.gif" alt="Painel do Leilômetro aberto na página de um lote do leilo.com.br, com score de oportunidade, alertas de risco e valores" width="600" />
+</p>
+
+| Painel no lote | Popup da extensão |
+|---|---|
+| <img src="docs/media/painel.png" alt="Painel com score 95, oportunidade excelente, alerta de laudo cautelar e Modo Leilão" width="320" /> | <img src="docs/media/popup.png" alt="Popup com três lotes salvos, cada um com seu score, lance e ano" width="360" /> |
+
 ## ⚙️ Como funciona
 
 - **Content scripts** (`content/`): rodam em `leilo.com.br`, identificam o lote aberto, buscam os dados na API pública do site (`lib/api.js`) e desenham o painel injetado, o Modo Leilão e o balão do assistente.
